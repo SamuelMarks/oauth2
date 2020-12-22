@@ -1,1 +1,4 @@
 *.log
+*.so
+*.o
+.vscode/
