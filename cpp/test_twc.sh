@@ -1,9 +1,9 @@
 #!/bin/bash
 
 echo "Compiling..."
-g++ -g -DTEST_TINY_WEB_SERVER=1 -lssl -lcrypto tiny_web_server.cpp -o tiny_web_server -std=c++2a
+g++ -g -DTEST_TINY_WEB_CLIENT=1 -lssl -lcrypto tiny_web_client.cpp -o tiny_web_client -std=c++2a
 echo "Running..."
-./tiny_web_server
+./tiny_web_client
 if [ $? == 0 ]; then
     echo "SUCCESS"
 else

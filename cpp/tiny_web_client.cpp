@@ -21,7 +21,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#ifdef TEST_TINY_WEB_SERVER
+#ifdef TEST_TINY_WEB_CLIENT
 #include "json_parser.cpp"
 #endif
 
@@ -441,7 +441,7 @@ int http_send(Request const &request, Response &response)
     return 0;
 }
 
-#ifdef TEST_TINY_WEB_SERVER
+#ifdef TEST_TINY_WEB_CLIENT
 int main()
 {
     auto req = Request{};
