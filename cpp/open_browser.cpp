@@ -4,13 +4,23 @@
 #include <string.h>
 #include <sstream>
 
+
+#ifdef TEST_OPEN_BROWSER
 #include "url.cpp"
+#else
+// here to make this not have red squiggles
+// we forward declare the URL class and its
+// operator<< function.
+class URL;
+std::ostream& operator<<(std::ostream& out, URL& url);
+#endif
 
 // We could have used a plain string instead of
 // creating a URL type, or we could use a url type
 // from a library, but here we create our own
 // for explanations sake.
-static void open_browser(URL url)
+static
+void open_browser(URL& url)
 {
     // On linux xdg-open is a command that opens the
     // preferred application for the type of file or url.

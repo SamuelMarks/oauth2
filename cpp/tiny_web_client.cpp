@@ -1,5 +1,5 @@
 // SSL Example Reference: https://stackoverflow.com/questions/41229601/openssl-in-c-socket-connection-https-client
-
+// Client Reference: https://stackoverflow.com/questions/22077802/simple-c-example-of-doing-an-http-post-and-consuming-the-response
 #include <algorithm>
 #include <string>
 #include <map>
@@ -14,6 +14,7 @@
 #include <sys/socket.h> /* socket, connect */
 #include <netinet/in.h> /* struct sockaddr_in, struct sockaddr */
 #include <netdb.h>      /* struct hostent, gethostbyname */
+#include <cstring>
 
 // SSL
 #include <netinet/in.h>
@@ -39,6 +40,7 @@ struct URI
     std::string host;
     int port;
     std::string path;
+    std::string querystring;
     std::map<std::string, std::string> parameters;
     std::string fragment;
 };
@@ -92,7 +94,11 @@ std::string create_message(Request const &request)
     oss << request.verb;
     oss << " ";
     oss << request.uri.path;
+    if ( !request.uri.querystring.empty() ) {
+        oss << "?" << request.uri.querystring;
+    }
     oss << " ";
+    // @TODO add in support for querystring/parameters
     oss << request.uri.protocol;
     oss << "/";
     oss << request.uri.protocol_version;
@@ -222,9 +228,35 @@ private:
     }
 };
 
-int http_send(Request const &request, Response &response)
+int http_send(Request&request, Response &response, std::map<std::string, std::string> post_fields = {})
 {
+    std::string content;
+    if ( request.verb == "POST" ) {
+        if ( post_fields.empty() ) {
+            throw std::runtime_error("request was POST, but no post fields given to http_send");
+        }
+        std::ostringstream ss;
+        size_t counter = 0;
+        for( auto const & [key, value] : post_fields) {
+            // TODO encode value for special characters
+            ss << key << "=" << value ;
+            if ( counter < post_fields.size()-1 ) {
+                ss << "&";
+            }
+            counter++;
+        }
+        content = ss.str();
+        request.headers.push_back("Content-Type: application/x-www-form-urlencoded");
+        std::cout << "POST Data: " << content << '\n';
+        std::ostringstream header_in;
+        header_in << "Content-Length: " << content.size();
+        request.headers.push_back(header_in.str());
+        
+    }
     std::string message = create_message(request);
+    if ( !content.empty() ) {
+        message += content + "\r\n";
+    }
     std::cout << "Target: " << create_host(request) << '\n';
     std::cout << "Sending: " << message;
 
@@ -334,6 +366,9 @@ int http_send(Request const &request, Response &response)
     /* receive the response */
     std::ostringstream incoming_data;
     char buffer[65535];
+    // SECURITY make sure we wipe the buffer as in previous runs
+    // we had some leakage into the next call.
+    memset(&buffer, 0, sizeof(buffer));
     total = sizeof(buffer) - 1;
     int received = 0;
     do

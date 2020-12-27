@@ -11,6 +11,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <err.h>
+#include "macros.h"
 
 // this is what we would define in our authentication settings in App ID
 #define SERVER_ADDR "127.0.0.1"
@@ -37,6 +38,33 @@ struct AuthenticationResponse{
     std::string secret;
     std::string code;
 };
+
+#include <map>
+std::map<std::string, std::string> 
+split_querystring(std::string const & querystring ) 
+{
+    std::map<std::string, std::string> result;
+    size_t lastpos = 0;
+    std::string key;
+    std::string value;
+    for(size_t ii=0; ii < querystring.size(); ii++ ) {
+        if ( querystring[ii] == '=' ) {
+            key = querystring.substr(lastpos, ii-lastpos);
+            lastpos = ii+1;
+        } else if ( querystring[ii] == '&' ) {
+            value = querystring.substr(lastpos, ii-lastpos);
+            result.insert(std::make_pair(key,value));
+            lastpos = ii+1;
+            key.clear();
+            value.clear();
+        }
+    }
+    if ( !key.empty() ) {
+        value = querystring.substr(lastpos);
+        result.insert(std::make_pair(key,value));
+    }
+    return result;
+}
 
 AuthenticationResponse wait_for_oauth2_redirect()
 {
@@ -112,11 +140,24 @@ AuthenticationResponse wait_for_oauth2_redirect()
 
         // check the URL
         auto start = incoming_message.find_first_of(' ')+1;
-        auto next = incoming_message.find_first_of(' ', start);
-        auto path = incoming_message.substr(start, next-start);
-        if ( path == EXPECTED_PATH ) {
+        auto end_of_target_url = incoming_message.find_first_of(' ', start);
+        auto target_url = incoming_message.substr(start, end_of_target_url-start);
+        auto querystring = incoming_message.find_first_of('?', start);
+        auto fragment = incoming_message.find_first_of('#', start);
+        auto end_of_path = MIN(end_of_target_url, querystring);
+        end_of_path = MIN(end_of_path, fragment);
+        auto path = incoming_message.substr(start, end_of_path - start);
+        if ( path == EXPECTED_PATH && querystring != std::string::npos ) {
             ok = true;
             authentication_response.raw = incoming_message;
+            // the code and state are passed as GET parameters
+            auto end_of_qs = MIN(end_of_target_url, fragment);
+            auto qs = incoming_message.substr(querystring+1, end_of_qs - querystring-1);
+            auto params = split_querystring(qs);
+            // note we do not have to check if the map contains these,
+            // if they do not exist they will return the blank string.
+            authentication_response.code = params["code"];
+            authentication_response.secret = params["state"];
         }
         
         if ( ok ) {
