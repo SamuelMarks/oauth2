@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     std::cout << "Generated secret state: " << temporary_secret_state << std::endl;
 
     auto metadata = json_create_from_string(response.body);
-    pretty_print(metadata);
+    json_pretty_print(metadata);
 
     auto openid_json = metadata.object.find("openid");
     std::cout << "OpenID: " << openid_json->second.text << std::endl;
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     }
 
     auto openid_metadata = json_create_from_string(openid_response.body);
-    pretty_print(openid_metadata);
+    json_pretty_print(openid_metadata);
 
     auto authorization_endpoint_json = openid_metadata.object.find("authorization_endpoint");
     auto authorization_endpoint = authorization_endpoint_json->second.text;
