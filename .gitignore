@@ -2,3 +2,4 @@
 *.so
 *.o
 .vscode/
+node_modules/
