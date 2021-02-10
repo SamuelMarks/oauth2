@@ -31,6 +31,43 @@ Using the following IBM services to handle authentication:
 5. Must be able to start a server to intercept the call back request.
 6. Keep track of current access token.
 
+## Testing your private OAuth2 API using curl
+
+**WARNING** Most tutorials have a bug in them for this so watch out!
+
+**WARNING** Do not use ```ibmcloud iam oauth-tokens``` to generate a new oauth token, it will not work.
+
+### Get a bearer token
+
+Get your information from AppID | Applications screen.  If you do not have a application of type regularwebapp then create one.  The application does not actually have to exist, its just a string to associate with the connection details.
+
+Replace \<oAuthServerUrl\>, \<clientId\> and \<secret\> with the relevant details from the connections information.
+
+```
+curl -X POST <oAuthServerUrl>/token \
+       -H "Authorization: Basic $(echo -n <clientId>:<secret> | base64 --wrap=0)" \
+       -H 'Content-Type: application/x-www-form-urlencoded' \
+       -d grant_type=client_credentials
+       
+```
+
+**NOTE**:You need the ```--wrap=0``` otherwise base64 will add in a newline character and you will get the following error:
+
+```
+curl: (92) HTTP/2 stream 0 was not closed cleanly: Unknown error code (err 1)
+```
+
+### Call your OAuth2 protected API
+
+Once you have this you can then call your private api call, for example:
+
+```
+curl --request GET \
+  --url https://31f5ff35.eu-gb.apigw.appdomain.cloud/private-authtest/Hello \
+  --header 'accept: application/json' \
+  --header 'authorization: Bearer REPLACE_BEARER_TOKEN'
+```
+
 ## Example response variables from the authorisation server
 
 This is intercepted by our local web server.
@@ -43,7 +80,7 @@ state=25310e6e8f
 
 ## Cloud Functions
 
-Before you begin add a new namespace.  It won't show up until you add at least 1 action in it, but otherwise you might find the API wrapper around the actions will not show up in the web interface.
+Before you begin add a new namespace.  **It won't show up until you add at least 1 action in it**, but otherwise you might find the API wrapper around the actions will not show up in the web interface.
 
 Create your packages to collect your api calls in.  In this case we create one for the public actions where the user does not need to be logged in, and one for the private actions where authorisation is required.:
 

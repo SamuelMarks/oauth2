@@ -1,0 +1,155 @@
+swagger: '2.0'
+info:
+  version: '1.0'
+  title: authtest
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /helloworld:
+    get:
+      operationId: getHelloworld
+      x-openwhisk:
+        namespace: ea319870-696b-4745-9db1-13b238d32ad0
+        action: HelloWorldAction
+        package: public
+        url: 'https://eu-gb.functions.appdomain.cloud/api/v1/web/ea319870-696b-4745-9db1-13b238d32ad0/public/HelloWorldAction.json'
+        auth: 66ab15de-c49e-42f0-9087-c26ccdb1ab3b
+      responses:
+        '200':
+          description: A successful invocation response
+  /GetApplicationEndpoint:
+    get:
+      operationId: getGetapplicationendpoint
+      x-openwhisk:
+        namespace: ea319870-696b-4745-9db1-13b238d32ad0
+        action: GetApplicationEndpoint
+        package: public
+        url: 'https://eu-gb.functions.appdomain.cloud/api/v1/web/ea319870-696b-4745-9db1-13b238d32ad0/public/GetApplicationEndpoint.json'
+        auth: 0cdafc34-2495-43e4-8785-cd35672cf7d1
+      responses:
+        '200':
+          description: A successful invocation response
+  /GetAccessToken:
+    post:
+      operationId: postGetaccesstoken
+      x-openwhisk:
+        namespace: ea319870-696b-4745-9db1-13b238d32ad0
+        action: GetAccessTokenAction
+        package: public
+        url: 'https://eu-gb.functions.appdomain.cloud/api/v1/web/ea319870-696b-4745-9db1-13b238d32ad0/public/GetAccessTokenAction.json'
+        auth: 7a223388-f800-4eee-ad8d-c536639a9f6d
+      responses:
+        '200':
+          description: A successful invocation response
+      parameters:
+        - name: body
+          in: body
+          description: Request body
+          required: false
+          schema:
+            type: object
+  /IsValidToken:
+    post:
+      operationId: postIsvalidtoken
+      x-openwhisk:
+        namespace: ea319870-696b-4745-9db1-13b238d32ad0
+        action: IntrospectAction
+        package: public
+        url: 'https://eu-gb.functions.appdomain.cloud/api/v1/web/ea319870-696b-4745-9db1-13b238d32ad0/public/IntrospectAction.json'
+        auth: 5bf2baf4-1b77-42c6-a7f5-dd2979192cec
+      responses:
+        '200':
+          description: A successful invocation response
+      parameters:
+        - name: body
+          in: body
+          description: Request body
+          required: false
+          schema:
+            type: object
+  /GetUserAttributes:
+    post:
+      operationId: postGetuserattributes
+      x-openwhisk:
+        namespace: ea319870-696b-4745-9db1-13b238d32ad0
+        action: AttributesAction
+        package: public
+        url: 'https://eu-gb.functions.appdomain.cloud/api/v1/web/ea319870-696b-4745-9db1-13b238d32ad0/public/AttributesAction.json'
+        auth: 5a367f77-cd7e-4271-b496-843bac7f1e5c
+      responses:
+        '200':
+          description: A successful invocation response
+      parameters:
+        - name: body
+          in: body
+          description: Request body
+          required: false
+          schema:
+            type: object
+x-ibm-configuration:
+  assembly:
+    execute:
+      - operation-switch:
+          case:
+            - operations:
+                - getHelloworld
+              execute:
+                - set-variable:
+                    actions:
+                      - set: message.headers.X-Require-Whisk-Auth
+                        value: 66ab15de-c49e-42f0-9087-c26ccdb1ab3b
+                - invoke:
+                    target-url: 'https://eu-gb.functions.appdomain.cloud/api/v1/web/ea319870-696b-4745-9db1-13b238d32ad0/public/HelloWorldAction.json'
+                    verb: keep
+            - operations:
+                - getGetapplicationendpoint
+              execute:
+                - set-variable:
+                    actions:
+                      - set: message.headers.X-Require-Whisk-Auth
+                        value: 0cdafc34-2495-43e4-8785-cd35672cf7d1
+                - invoke:
+                    target-url: 'https://eu-gb.functions.appdomain.cloud/api/v1/web/ea319870-696b-4745-9db1-13b238d32ad0/public/GetApplicationEndpoint.json'
+                    verb: keep
+            - operations:
+                - postGetaccesstoken
+              execute:
+                - set-variable:
+                    actions:
+                      - set: message.headers.X-Require-Whisk-Auth
+                        value: 7a223388-f800-4eee-ad8d-c536639a9f6d
+                - invoke:
+                    target-url: 'https://eu-gb.functions.appdomain.cloud/api/v1/web/ea319870-696b-4745-9db1-13b238d32ad0/public/GetAccessTokenAction.json'
+                    verb: keep
+            - operations:
+                - postIsvalidtoken
+              execute:
+                - set-variable:
+                    actions:
+                      - set: message.headers.X-Require-Whisk-Auth
+                        value: 5bf2baf4-1b77-42c6-a7f5-dd2979192cec
+                - invoke:
+                    target-url: 'https://eu-gb.functions.appdomain.cloud/api/v1/web/ea319870-696b-4745-9db1-13b238d32ad0/public/IntrospectAction.json'
+                    verb: keep
+            - operations:
+                - postGetuserattributes
+              execute:
+                - set-variable:
+                    actions:
+                      - set: message.headers.X-Require-Whisk-Auth
+                        value: 5a367f77-cd7e-4271-b496-843bac7f1e5c
+                - invoke:
+                    target-url: 'https://eu-gb.functions.appdomain.cloud/api/v1/web/ea319870-696b-4745-9db1-13b238d32ad0/public/AttributesAction.json'
+                    verb: keep
+          otherwise: []
+          title: whisk-invoke
+  cors:
+    enabled: true
+  testable:
+    enabled: true
+basePath: /authtest
+host: 31f5ff35.eu-gb.apigw.appdomain.cloud

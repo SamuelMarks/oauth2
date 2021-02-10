@@ -1,0 +1,59 @@
+swagger: '2.0'
+info:
+  version: '1.0'
+  title: private-authtest
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /Hello:
+    get:
+      operationId: getHello
+      x-openwhisk:
+        namespace: ea319870-696b-4745-9db1-13b238d32ad0
+        action: HelloPrivateWorldAction
+        package: private
+        url: 'https://eu-gb.functions.appdomain.cloud/api/v1/web/ea319870-696b-4745-9db1-13b238d32ad0/private/HelloPrivateWorldAction.json'
+        auth: 66a9530f-cf46-4b95-8313-9ad71ec47103
+      responses:
+        '200':
+          description: A successful invocation response
+x-ibm-configuration:
+  assembly:
+    execute:
+      - operation-switch:
+          case:
+            - operations:
+                - getHello
+              execute:
+                - set-variable:
+                    actions:
+                      - set: message.headers.X-Require-Whisk-Auth
+                        value: 66a9530f-cf46-4b95-8313-9ad71ec47103
+                - invoke:
+                    target-url: 'https://eu-gb.functions.appdomain.cloud/api/v1/web/ea319870-696b-4745-9db1-13b238d32ad0/private/HelloPrivateWorldAction.json'
+                    verb: keep
+          otherwise: []
+          title: whisk-invoke
+  cors:
+    enabled: true
+  testable:
+    enabled: true
+basePath: /private-authtest
+securityDefinitions:
+  app-id:
+    type: oauth2
+    flow: application
+    tokenUrl: ''
+    x-tokenintrospect:
+      url: null
+    x-provider:
+      name: app-id
+      params:
+        tenantId: 3143b98e-2035-4fac-b765-879402a1b585
+security:
+  - app-id: []
+host: 31f5ff35.eu-gb.apigw.appdomain.cloud
