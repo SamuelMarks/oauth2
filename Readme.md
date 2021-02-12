@@ -3,6 +3,12 @@
 Why? We want to be able to separate native code on our users devices from code that accesses our database and other resources.  By using OAuth2 we can give our users flexibility in how they authenticate and minimising any sensitive information flowing between the client and server.
 
 
+## Important References
+
+* https://ibm-cloud-security.github.io/appid-clientsdk-js/index.html
+* https://cloud.ibm.com/docs/appid?topic=appid-adding-overview
+
+
 ## Flow
 
 1. User application requests OAuth2 url from Company server.
@@ -35,7 +41,7 @@ Using the following IBM services to handle authentication:
 
 **WARNING** Most tutorials have a bug in them for this so watch out!
 
-**WARNING** Do not use ```ibmcloud iam oauth-tokens``` to generate a new oauth token, it will not work.
+**WARNING** Do not use ```ibmcloud iam oauth-tokens``` to generate a new oauth token, it will not the right command to get test tokens for CUrl.
 
 ### Get a bearer token
 
@@ -111,7 +117,7 @@ function main(params) {
 }
 ```
 
-Here is the function that allows our client to access a client token but at no time does the application know our client secret.  It is safe on the server side.
+Here is the function that allows our client to access a client token but at no time does the application know our client secret.  It is safe on the server side.  This is not required if using the PKCE flow.
 
 ```
 // Name: public/GetAccessToken

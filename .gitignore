@@ -3,3 +3,8 @@
 *.o
 .vscode/
 node_modules/
+localdev-config.json
+bin/
+.env
+*.env.js
+env.js
