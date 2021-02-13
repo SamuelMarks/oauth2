@@ -47,3 +47,4 @@ This is a quick summary of the Cotter reference below, which you should read.
 * https://dev.to/cotter/what-on-earth-is-oauth-a-super-simple-intro-to-oauth-2-0-access-tokens-and-how-to-implement-it-in-your-site-48jo
 * https://jwt.io/introduction
 * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
+* https://www.valentinog.com/blog/oauth2/
