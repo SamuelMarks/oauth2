@@ -32,6 +32,16 @@ In a header you set the following:
 Set-Cookie: refresh_token=<value>; expires=<unix timestamp a year in the future>; domain=<mydomain.com>; path=/; secure; HttpOnly
 ```
 
+You can also set this as a Cookie via the [Javascript Cookie API](https://www.w3schools.com/js/js_cookies.asp).
+
+## Attacks against OAuth2 Tokens
+
+This is a quick summary of the Cotter reference below, which you should read.
+
+* Replay attacks - sending same request twice, solution is to use nonce values
+* Cross site request forgery (CSRF) - forces an end user to execute unwanted actions when already authenticated,  keep access token in memory and store refresh token as a cookie with httpOnly set. Assumes authentication server is using CORS policy correctly.
+* Cross Site Scripting (XSS) - attackers can inject client-side scripts into pages viewed by other users, don't store access tokens in local storage
+
 ## Further Reading
 
 * https://dev.to/cotter/what-on-earth-is-oauth-a-super-simple-intro-to-oauth-2-0-access-tokens-and-how-to-implement-it-in-your-site-48jo
