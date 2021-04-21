@@ -257,6 +257,7 @@ void json_parse_array_value(JsonParseContext& context, JsonItem& arrayItem ) {
     }
 }
 
+/*
 INTERNAL
 void parse_json_text(JsonItem& textItem, std::string const & buffer, size_t& index )
 {
@@ -274,6 +275,7 @@ void parse_json_text(JsonItem& textItem, std::string const & buffer, size_t& ind
     }
     textItem.text = buffer.substr(start, index - start);
 }
+*/
 
 INTERNAL
 JsonItem json_create_from_string_buffer(JsonParseContext& context) {

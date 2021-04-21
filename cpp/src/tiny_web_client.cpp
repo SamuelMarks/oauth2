@@ -117,7 +117,7 @@ std::string create_message(Request const &request)
 class SSLClient
 {
 public:
-    SSLClient() : valid_(false), session_(nullptr), context_(nullptr), ssl_socket_file_descriptor_(0)
+    SSLClient() : context_(nullptr), session_(nullptr),  valid_(false), ssl_socket_file_descriptor_(0)
     {
     }
 

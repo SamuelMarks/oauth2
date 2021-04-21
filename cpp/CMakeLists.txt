@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.4)
 cmake_policy(SET CMP0048 NEW)
-project(oauth2_cpp VERSION 0.0.0 LANGUAGES CXX)
+project(oauth2_cpp VERSION 0.0.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(src
@@ -52,7 +52,6 @@ if ((DEFINED CMAKE_C_FLAGS AND NOT CMAKE_C_FLAGS STREQUAL "")
         OR (DEFINED CMAKE_CXX_FLAGS AND NOT CMAKE_CXX_FLAGS STREQUAL ""))
     set(TARGET_ARCH_REGEX "^.*-march[= ]([^ ]+).*$")
     string(REGEX MATCH "${TARGET_ARCH_REGEX}" TARGET_ARCH_MATCH ${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS})
-    string(REGEX MATCH <match-regex> <out-var> <input>...)
     if (TARGET_ARCH_MATCH)
         string(REGEX REPLACE "${TARGET_ARCH_REGEX}" "\\1" TARGET_ARCH ${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS})
     endif ()
@@ -61,18 +60,37 @@ endif ()
 #################
 # SSL libraries #
 #################
-
 if (CRYPTO_LIB STREQUAL "OpenSSL")
     if ((NOT DEFINED OPENSSL_ROOT_DIR OR NOT IS_DIRECTORY OPENSSL_ROOT_DIR)
             AND CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND IS_DIRECTORY "/usr/local/opt/openssl")
-        set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl")
+        execute_process(
+                COMMAND brew --prefix OpenSSL
+                RESULT_VARIABLE BREW_OPENSSL
+                OUTPUT_VARIABLE BREW_OPENSSL_PREFIX
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        if (BREW_OPENSSL EQUAL 0 AND EXISTS "${BREW_OPENSSL_PREFIX}")
+            message(STATUS "Found OpenSSL keg installed by Homebrew at ${BREW_OPENSSL_PREFIX}")
+            set(OPENSSL_ROOT_DIR "${BREW_OPENSSL_PREFIX}/")
+            set(OPENSSL_INCLUDE_DIR "${BREW_OPENSSL_PREFIX}/include")
+            set(OPENSSL_LIBRARIES "${BREW_OPENSSL_PREFIX}/lib")
+            set(OPENSSL_CRYPTO_LIBRARY "${BREW_OPENSSL_PREFIX}/lib/libcrypto.dylib")
+        endif()
     elseif ((NOT DEFINED OPENSSL_ROOT_DIR OR NOT IS_DIRECTORY OPENSSL_ROOT_DIR)
             AND IS_DIRECTORY "/usr/include/openssl")
         set(OPENSSL_ROOT_DIR "/usr/include/openssl")
     endif ()
     find_package(OpenSSL REQUIRED)
-    check_include_file("openssl/sha.h" HAVE_OPENSSL_SHA_H LANGUAGE C)
+    if (DEFINED OPENSSL_INCLUDE_DIR)
+        if (EXISTS "${OPENSSL_INCLUDE_DIR}/openssl/sha.h")
+            set(HAVE_OPENSSL_SHA_H "ON")
+        endif()
+    else()
+        check_include_file("openssl/sha.h" HAVE_OPENSSL_SHA_H)
+    endif()
     if (NOT HAVE_OPENSSL_SHA_H)
+        find_package(PkgConfig REQUIRED)
+        pkg_search_module(OPENSSL REQUIRED openssl)
         message(FATAL_ERROR "OpenSSL installation doesn't have the required header files, install them or use alt SSL")
     endif ()
 elseif (CRYPTO_LIB STREQUAL "LibreSSL")
