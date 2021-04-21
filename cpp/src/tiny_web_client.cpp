@@ -460,8 +460,8 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
             response.headers.push_back(header);
             if (response.headers.size() == 1)
             {
-                auto start = header.find_first_of(" ") + 1;
-                auto end = header.find_last_of(" ");
+                auto start = header.find_first_of(' ') + 1;
+                auto end = header.find_last_of(' ');
                 auto status = header.substr(start, end - start);
                 response.status = std::stol(status);
             }
@@ -470,8 +470,8 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
                            [](unsigned char c) { return std::tolower(c); });
             if (lc_header.find("content-type: ") == 0)
             {
-                auto start = lc_header.find(" ") + 1;
-                auto end = lc_header.find(";");
+                auto start = lc_header.find(' ') + 1;
+                auto end = lc_header.find(';');
                 if (end == std::string::npos)
                 {
                     end = lc_header.size();

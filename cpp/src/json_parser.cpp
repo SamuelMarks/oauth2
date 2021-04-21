@@ -148,15 +148,7 @@ void json_parse_number_value(JsonParseContext& context, JsonItem& item)
     }
     if ( index < context.buffer.size() && is_decimal_point(context.buffer[index]) ) {
         // float
-        while( true ) {
-            ++index;
-            if ( index >= context.buffer.size() ) {
-                break;
-            }
-            if ( !is_digit(context.buffer[index]) ) {
-                break;
-            }
-        }
+        for(;index < context.buffer.size() || is_digit(context.buffer[index]) ; ++index) {}
         context.selection_end_pos = index-1;
         context.pos = index;
         item.type = JsonItemType::FLOAT;
@@ -289,14 +281,12 @@ JsonItem json_create_from_string_buffer(JsonParseContext& context) {
         if ( context.buffer[context.pos] == '{' ) {
             json_parse_object_value(context, item);
             return item;
-        } else if ( context.buffer[context.pos] == '}' ) {
-            return item;
         } else if ( context.buffer[context.pos] == '[' ) {
             json_parse_array_value(context, item);
             return item;
-        } else if ( context.buffer[context.pos] == ']' ) {
-            return item;
-        } else if ( context.buffer[context.pos] == ',' ) {
+        } else if ( context.buffer[context.pos] == '}' ||
+                    context.buffer[context.pos] == ']' ||
+                    context.buffer[context.pos] == ',' ) {
             return item;
         } else if ( context.pos < context.buffer.size() - 3 && 
                     context.buffer[context.pos] == 'n' && 
@@ -398,7 +388,7 @@ std::string json_json_pretty_print_item(JsonItem const & json, size_t indent) {
     case JsonItemType::ARRAY:{
         std::ostringstream in;
         in << "[";
-        if ( json.array.size() == 0 ) {
+        if ( json.array.empty() ) {
             in << "]";
             return in.str();
         }

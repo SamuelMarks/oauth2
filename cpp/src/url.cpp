@@ -41,9 +41,9 @@ public:
         return out;
     }
 
-    std::string encoded_querystring() const
+    [[nodiscard]] std::string encoded_querystring() const
     {
-        if (params_.size() == 0)
+        if (params_.empty())
         {
             return querystring;
         }
@@ -64,10 +64,10 @@ public:
         }
     }
 
-    std::string encoded() const
+    [[nodiscard]] std::string encoded() const
     {
         std::cout << params_.size() << std::endl;
-        if (params_.size() == 0)
+        if (params_.empty())
         {
             return encoded_data_;
         }
@@ -85,11 +85,11 @@ public:
                 counter++;
             }
             std::string url = protocol + "://" + domain + path;
-            if (qs.size() > 0)
+            if (!qs.empty())
             {
                 url += "?" + qs;
             }
-            if (fragment.size() > 0)
+            if (!fragment.empty())
             {
                 url += "#" + fragment;
             }
@@ -97,7 +97,7 @@ public:
         }
     }
 
-    void add_param(std::string key, std::string value)
+    void add_param(const std::string& key, const std::string& value)
     {
         params_.insert(std::make_pair(key, value));
     }
@@ -117,16 +117,16 @@ private:
         {
             protocol = "https";
         }
-        if (protocol.size() == 0)
+        if (protocol.empty())
         {
             throw std::runtime_error("no protocol given, http(s) expected at start of url");
         }
         return protocol.size();
     }
 
-    size_t check_protocol_domain_separator_(std::string const &url)
+    size_t check_protocol_domain_separator_(std::string const &url) const
     {
-        auto p = url.find_first_of("/");
+        auto p = url.find_first_of('/');
         if (p == std::string::npos)
         {
             throw std::runtime_error("invalid url, no // found after protocol");
@@ -149,13 +149,13 @@ private:
             return pos;
         }
         pos++;
-        auto end_of_domain = url.find_first_of("/", pos);
-        auto querystring_pos = url.find_first_of("?", pos);
-        auto fragment_pos = url.find_first_of("#", pos);
+        auto end_of_domain = url.find_first_of('/', pos);
+        auto querystring_pos = url.find_first_of('?', pos);
+        auto fragment_pos = url.find_first_of('#', pos);
         end_of_domain = MIN(end_of_domain, fragment_pos);
         end_of_domain = MIN(end_of_domain, querystring_pos);
         auto this_domain = url.substr(pos, end_of_domain - pos);
-        if (this_domain.size() == 0)
+        if (this_domain.empty())
         {
             std::ostringstream ss;
             ss << "no domain found in '" << url << "'";
@@ -214,8 +214,8 @@ private:
         {
             return pos;
         }
-        auto querystring_pos = url.find_first_of("?", pos);
-        auto fragment_pos = url.find_first_of("#", pos);
+        auto querystring_pos = url.find_first_of('?', pos);
+        auto fragment_pos = url.find_first_of('#', pos);
         if (querystring_pos == std::string::npos && fragment_pos == std::string::npos)
         {
             path = url.substr(pos);
@@ -225,18 +225,18 @@ private:
             auto next_pos = MIN(querystring_pos, fragment_pos);
             path = url.substr(pos, next_pos - pos);
         }
-        if (path.size() == 0)
+        if (path.empty())
         {
             std::ostringstream ss;
             ss << "empty path in '" << url << "'";
             throw std::runtime_error(ss.str());
         }
-        for (auto ii = 0; ii < path.size(); ii++)
+        for (char ii : path)
         {
-            if (!is_valid_path_char(path[ii]))
+            if (!is_valid_path_char(ii))
             {
                 std::ostringstream ss;
-                ss << "invalid character '" << path[ii] << "' found in path of '" << url << "'";
+                ss << "invalid character '" << ii << "' found in path of '" << url << "'";
                 throw std::runtime_error(ss.str());
             }
         }
@@ -249,8 +249,8 @@ private:
         {
             return pos;
         }
-        auto querystring_pos_start = url.find_first_of("?", pos);
-        auto querystring_pos_end = url.find_first_of("#", pos);
+        auto querystring_pos_start = url.find_first_of('?', pos);
+        auto querystring_pos_end = url.find_first_of('#', pos);
         if (querystring_pos_start == std::string::npos)
         {
             return pos;
@@ -263,38 +263,38 @@ private:
         return querystring_pos_end;
     }
 
-    std::string encode_(std::string const &text) const
+    [[nodiscard]] static std::string encode_(std::string const &text)
     {
         std::ostringstream ss;
-        for (auto ii = 0; ii < text.size(); ii++)
+        for (char ii : text)
         {
-            if (text[ii] == ' ')
+            if (ii == ' ')
             {
                 ss << "%20";
             }
-            else if (text[ii] == '\"')
+            else if (ii == '\"')
             {
                 ss << "%22";
             }
-            else if (text[ii] == '\'')
+            else if (ii == '\'')
             {
                 ss << "%27";
             }
-            else if (text[ii] == '<')
+            else if (ii == '<')
             {
                 ss << "%3C";
             }
-            else if (text[ii] == '>')
+            else if (ii == '>')
             {
                 ss << "%3E";
             }
-            else if (text[ii] == '+')
+            else if (ii == '+')
             {
                 ss << "";
             }
             else
             {
-                ss << text[ii];
+                ss << ii;
             }
         }
         return ss.str();
@@ -302,8 +302,8 @@ private:
 
     std::string encode_querystring_(std::string const &url)
     {
-        auto querystring_pos_start = url.find_first_of("?");
-        auto querystring_pos_end = url.find_first_of("#", querystring_pos_start);
+        auto querystring_pos_start = url.find_first_of('?');
+        auto querystring_pos_end = url.find_first_of('#', querystring_pos_start);
         // check querystring and convert any special characters to the appropriate
         // %XX code.
         if (querystring_pos_start == std::string::npos)
@@ -358,8 +358,8 @@ private:
 
     size_t set_fragment_(std::string const &url, size_t pos)
     {
-        auto fragment_pos_start = url.find_first_of("#");
-        auto fragment_pos_end = url.find_first_of("?", fragment_pos_start);
+        auto fragment_pos_start = url.find_first_of('#');
+        auto fragment_pos_end = url.find_first_of('?', fragment_pos_start);
         if (fragment_pos_start == std::string::npos)
         {
             return pos;
@@ -388,7 +388,7 @@ private:
     {
         data_ = url;
         encoded_data_ = url;
-        if (encoded_data_.size() == 0)
+        if (encoded_data_.empty())
         {
             throw std::runtime_error("empty string is not a valid url");
         }
