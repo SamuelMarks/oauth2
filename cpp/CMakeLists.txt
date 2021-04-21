@@ -3,9 +3,7 @@ cmake_policy(SET CMP0048 NEW)
 project(oauth2_cpp VERSION 0.0.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(src
-        "src/main.cpp"
-        )
+set(src "src/main.cpp")
 
 include(CheckIncludeFile)
 include(CheckIncludeFiles)
@@ -164,7 +162,12 @@ elseif (DEFINED USE_LIBFETCH)
 endif ()
 
 if (DEFINED OPENSSL_LIBRARIES)
-    target_link_libraries(${PROJECT_NAME} OpenSSL::SSL)
-    target_link_libraries(${PROJECT_NAME} ${OPENSSL_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} OpenSSL::SSL ${OPENSSL_LIBRARIES})
     target_include_directories(${PROJECT_NAME} PRIVATE ${OPENSSL_INCLUDE_DIR})
 endif ()
+
+if (APPLE) # or if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    find_library(CORE_FOUNDATION_LIBRARY CoreFoundation ONLY)
+    find_library(APPLICATION_SERVICES_LIBRARY ApplicationServices ONLY)
+    target_link_libraries("${PROJECT_NAME}" "${CORE_FOUNDATION_LIBRARY}" "${APPLICATION_SERVICES_LIBRARY}")
+endif()

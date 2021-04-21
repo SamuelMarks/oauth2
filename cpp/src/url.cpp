@@ -1,6 +1,5 @@
 #include <iostream>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
 #include <sstream>
 #include <map>
 
