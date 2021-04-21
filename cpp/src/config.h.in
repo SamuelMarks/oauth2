@@ -1,0 +1,19 @@
+#ifndef OAUTH2_CPP_CONFIG_H
+#define OAUTH2_CPP_CONFIG_H
+
+#define VERSION "@oauth2_cpp_VERSION@"
+
+#cmakedefine USE_LIBFETCH @USE_FETCH@
+#cmakedefine USE_LIBCURL @USE_LIBCURL@
+#cmakedefine USE_WININET @USE_WININET@
+#cmakedefine USE_OPENBSD_FTP @USE_OPENBSD_FTP@
+
+#define CRYPTO_LIB "@CRYPTO_LIB@"
+#cmakedefine USE_OPENSSL @USE_OPENSSL@
+#cmakedefine USE_LIBRESSL @USE_LIBRESSL@
+#cmakedefine USE_COMMON_CRYPTO @USE_COMMON_CRYPTO@
+#cmakedefine USE_WINCRYPT @USE_WINCRYPT@
+
+#define _@TARGET_ARCH@_
+
+#endif /* OAUTH2_CPP_CONFIG_H */

@@ -1,4 +1,3 @@
-
 #include <string>
 
 static inline bool is_whitespace(char ch) {

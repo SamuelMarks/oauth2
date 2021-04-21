@@ -7,20 +7,23 @@
 #include <sstream>
 #include <iostream>
 #include <sstream>
-#include <stdio.h>      /* printf, sprintf */
-#include <stdlib.h>     /* exit */
+#include <cstdio>       /* printf, sprintf */
+#include <cstdlib>      /* exit */
 #include <unistd.h>     /* read, write, close */
-#include <string.h>     /* memcpy, memset */
+#include <cstring>      /* memcpy, memset */
 #include <sys/socket.h> /* socket, connect */
 #include <netinet/in.h> /* struct sockaddr_in, struct sockaddr */
 #include <netdb.h>      /* struct hostent, gethostbyname */
-#include <cstring>
 
 // SSL
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
+#include "config.h"
+#ifdef USE_OPENSSL
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#endif
 
 #ifdef TEST_TINY_WEB_CLIENT
 #include "json_parser.cpp"
@@ -29,7 +32,7 @@
 void error(const char *msg)
 {
     perror(msg);
-    exit(0);
+    exit(EXIT_FAILURE);
 }
 
 struct URI
@@ -246,7 +249,7 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
             counter++;
         }
         content = ss.str();
-        request.headers.push_back("Content-Type: application/x-www-form-urlencoded");
+        request.headers.emplace_back("Content-Type: application/x-www-form-urlencoded");
         std::cout << "POST Data: " << content << '\n';
         std::ostringstream header_in;
         header_in << "Content-Length: " << content.size();
