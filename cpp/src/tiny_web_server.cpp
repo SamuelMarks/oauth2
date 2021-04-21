@@ -4,11 +4,18 @@
 #include <sstream>
 #include <cstdio>
 #include <cstdlib>
-#include <unistd.h>
 #include <sys/types.h>
+
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#include <winsock.h>
+#define close closesocket
+#else
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <err.h>
+#endif
+
 #include "macros.h"
 
 // this is what we would define in our authentication settings in App ID

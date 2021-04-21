@@ -9,8 +9,13 @@
 #include <sstream>
 #include <cstdio>       /* printf, sprintf */
 #include <cstdlib>      /* exit */
-#include <unistd.h>     /* read, write, close */
 #include <cstring>      /* memcpy, memset */
+
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+// SSL
+#include <Ws2tcpip.h>
+#else
+#include <unistd.h>     /* read, write, close */
 #include <sys/socket.h> /* socket, connect */
 #include <netinet/in.h> /* struct sockaddr_in, struct sockaddr */
 #include <netdb.h>      /* struct hostent, gethostbyname */
@@ -18,6 +23,7 @@
 // SSL
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
 
 #include "config.h"
 #ifdef USE_OPENSSL

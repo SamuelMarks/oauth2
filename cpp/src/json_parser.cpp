@@ -23,6 +23,8 @@ struct JsonParseContext;
 using JsonArray = std::vector<JsonItem>;            
 using JsonObject = std::map<std::string, JsonItem>; 
 
+#undef ERROR
+
 enum class JsonItemType {
     NULL_VALUE = 0,
     TRUE_VALUE,

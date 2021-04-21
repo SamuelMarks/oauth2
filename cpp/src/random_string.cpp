@@ -2,7 +2,13 @@
 
 #include <iostream>
 #include <ctime>
+
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#include <process.h>
+#define getpid _getpid
+#else
 #include <unistd.h>
+#endif
 
 static const char alphanum[] =
         "0123456789"
