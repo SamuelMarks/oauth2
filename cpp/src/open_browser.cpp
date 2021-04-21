@@ -1,9 +1,14 @@
 // Reference https://github.com/microsoft/cpprestsdk/blob/7fbb08c491f9c8888cc0f3d86962acb3af672772/Release/samples/Oauth1Client/Oauth1Client.cpp
 #include <iostream>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
 #include <sstream>
 
+#ifdef __linux__
+#include <cstring>
+#elif defined(macintosh) || defined(Macintosh) || defined(__APPLE__) && defined(__MACH__)
+#include <CoreFoundation/CFBundle.h>
+#include <ApplicationServices/ApplicationServices.h>
+#endif
 
 #ifdef TEST_OPEN_BROWSER
 #include "url.cpp"
@@ -22,6 +27,7 @@ std::ostream& operator<<(std::ostream& out, URL& url);
 static
 void open_browser(URL& url)
 {
+#ifdef __linux__
     // On linux xdg-open is a command that opens the
     // preferred application for the type of file or url.
     // For more information use: man xdg-open on the
@@ -36,6 +42,22 @@ void open_browser(URL& url)
     auto browser_cmd_string = browser_cmd.str();
     std::cout << browser_cmd_string << std::endl;
     (void)system(browser_cmd_string.c_str());
+
+#elif defined(macintosh) || defined(Macintosh) || defined(__APPLE__) && defined(__MACH__)
+
+    std::ostringstream _url;
+    _url << url;
+    auto url_str = _url.str();
+    CFURLRef cf_url = CFURLCreateWithBytes (
+            NULL,                        // allocator
+            (UInt8*)url_str.c_str(),     // URLBytes
+            (signed long)url_str.length(),            // length
+            kCFStringEncodingASCII,      // encoding
+            NULL                         // baseURL
+    );
+    LSOpenCFURLRef(cf_url,0);
+    CFRelease(cf_url);
+#endif
 }
 
 #ifdef TEST_OPEN_BROWSER
