@@ -7,8 +7,16 @@
 #include <sys/types.h>
 
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
-#include <winsock.h>
+#include <winsock2.h>
 #define close closesocket
+#define write _write
+#define read _read
+
+void err(int code, const char *message) {
+    fprintf(stderr, message);
+    exit(code);
+}
+
 #else
 #include <unistd.h>
 #include <sys/socket.h>
@@ -80,11 +88,11 @@ AuthenticationResponse wait_for_oauth2_redirect()
     struct sockaddr_in svr_addr, cli_addr;
     socklen_t sin_len = sizeof(cli_addr);
 
-    int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    int server_socket = (int)socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0)
         err(1, "can't open socket");
 
-    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &socket_options, sizeof(int));
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&socket_options, sizeof(int));
 
     int port = PORT_TO_BIND;
     svr_addr.sin_family = AF_INET;
@@ -101,7 +109,7 @@ AuthenticationResponse wait_for_oauth2_redirect()
     bool ok = false;
     while (!ok)
     {
-        client_file_descriptor = accept(server_socket, (struct sockaddr *)&cli_addr, &sin_len);
+        client_file_descriptor = (int)accept(server_socket, (struct sockaddr *)&cli_addr, &sin_len);
         printf("got incoming connection\n");
 
         if (client_file_descriptor == -1)

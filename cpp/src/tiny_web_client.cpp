@@ -9,11 +9,17 @@
 #include <cstdio>       /* printf, sprintf */
 #include <cstdlib>      /* exit */
 #include <cstring>      /* memcpy, memset */
+#include "config.h"
 
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+
 #include <io.h>
 // #include <winsock.h>
 #include <winsock2.h>
+#define close closesocket
+#define write _write
+#define read _read
 
 // SSL
 #include <Ws2tcpip.h>
@@ -270,11 +276,10 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
 
     struct hostent *server;
     struct sockaddr_in serv_addr;
-    int socket_file_descriptor;
     SSLClient ssl_client;
 
     /* create the socket */
-    socket_file_descriptor = socket(AF_INET, SOCK_STREAM, 0);
+    int socket_file_descriptor = (int)socket(AF_INET, SOCK_STREAM, 0);
     if (socket_file_descriptor < 0)
     {
         response.error.message = "ERROR opening socket";
@@ -319,14 +324,12 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
 
     /* send the request */
 
-    int bytes;
-    auto total = message.size();
-    int sent = 0;
+    int bytes, total = (int)message.size(), sent = 0;
     do
     {
         if (ssl_client.is_valid())
         {
-            bytes = SSL_write(ssl_client.session(), message.c_str(), message.size());
+            bytes = SSL_write(ssl_client.session(), message.c_str(), (int)message.size());
             response.error.code = 1004;
             if (bytes < 0)
             {
@@ -373,7 +376,7 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
 
     /* receive the response */
     std::ostringstream incoming_data;
-    char buffer[65535];
+    char buffer[STACK_SIZE];
     // SECURITY make sure we wipe the buffer as in previous runs
     // we had some leakage into the next call.
     memset(&buffer, 0, sizeof(buffer));
@@ -444,7 +447,7 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
 
     response.raw = incoming_data.str();
     size_t pos = 0;
-    for (auto ii = 0; ii < response.raw.size(); ii++)
+    for (size_t ii = 0; ii < response.raw.size(); ii++)
     {
         if (response.raw[ii] == '\r' && response.raw[ii + 1] == '\n' &&
             response.raw[ii + 2] == '\r' && response.raw[ii + 3] == '\n')
@@ -510,4 +513,8 @@ int main()
         std::cout << resp.body << std::endl;
     }
 }
+#endif
+
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#undef _WINSOCK_DEPRECATED_NO_WARNINGS
 #endif

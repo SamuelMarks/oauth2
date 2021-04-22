@@ -105,6 +105,14 @@ endif ()
 # Configure file (interpolate) #
 ################################
 
+if (DEFINED STACK_SIZE)
+    # pass
+elseif (WIN32)
+    set(STACK_SIZE 16384)
+else ()
+    set(STACK_SIZE 65535)
+endif ()
+
 configure_file("src/config.h.in" "${PROJECT_BINARY_DIR}/src/config.h" @ONLY)
 
 #############################################

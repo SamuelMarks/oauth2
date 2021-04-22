@@ -28,7 +28,7 @@ std::string generate_random_string(unsigned int required_length) {
     // declare and reserve some memory for a string of our given length
     std::string tmp_s;
     tmp_s.reserve(required_length);
-    for (auto ii = 0; ii < required_length; ++ii) {
+    for (size_t ii = 0; ii < required_length; ++ii) {
         tmp_s += alphanum[rand() % (N - 1)];
     }
     return tmp_s;

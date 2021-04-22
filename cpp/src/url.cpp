@@ -171,7 +171,7 @@ private:
             {
                 throw std::runtime_error("invalid domain, cannot end with a hyphen");
             }
-            for (auto ii = 0; ii < this_domain.size(); ii++)
+            for (size_t ii = 0; ii < this_domain.size(); ii++)
             {
                 if (this_domain[ii] == '#' || this_domain[ii] == '?')
                 {
@@ -398,7 +398,7 @@ private:
             ss << "invalid url found, string '" << url << "' is too short";
             throw std::runtime_error(ss.str());
         }
-        auto pos = 0UL;
+        size_t pos = 0;
         set_protocol_(url);
         pos = check_protocol_domain_separator_(url);
         pos = set_domain_(url, pos);
