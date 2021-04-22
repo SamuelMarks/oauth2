@@ -67,7 +67,7 @@ JsonItem json_create_from_string(std::string const & buffer);
 
 INTERNAL
 JsonItem json_create_new() {
-    auto item = JsonItem {};
+    JsonItem item = JsonItem {};
     item.type = JsonItemType::END_OF_JSON_VALUES;
     return item;
 }
@@ -135,30 +135,22 @@ void json_parse_key(JsonParseContext& context, JsonItem& item)
 INTERNAL
 void json_parse_number_value(JsonParseContext& context, JsonItem& item) 
 {
-    auto index = context.pos;
+    size_t index = context.pos;
     context.selection_start_pos = context.pos;
-    while( true ) {
-        index++;
-        if ( index >= context.buffer.size() ) {
-            break;
-        }
-        if ( !is_digit(context.buffer[index]) ) {
-            break;
-        }
-    }
+    for( ;index < context.buffer.size() || is_digit(context.buffer[index]); ++index) {}
     if ( index < context.buffer.size() && is_decimal_point(context.buffer[index]) ) {
         // float
         for(;index < context.buffer.size() || is_digit(context.buffer[index]) ; ++index) {}
         context.selection_end_pos = index-1;
         context.pos = index;
         item.type = JsonItemType::FLOAT;
-        auto val = json_get_selected_text(context);
+        std::string val = json_get_selected_text(context);
         item.real = std::stof(val);
     } else {
         context.selection_end_pos = index-1;
         context.pos = index;
         item.type = JsonItemType::INTEGER;
-        auto val = json_get_selected_text(context);
+        std::string val = json_get_selected_text(context);
         item.integer = std::stol(val);
     }
 }
@@ -197,7 +189,7 @@ void json_parse_object_value(JsonParseContext& context, JsonItem& objectItem ) {
     context.selection_start_pos = context.pos;
     context.pos++;
     while(true) {
-        auto new_key = json_create_from_string_buffer(context);
+        JsonItem new_key = json_create_from_string_buffer(context);
         if ( new_key.type != JsonItemType::TEXT && new_key.type != JsonItemType::INTEGER ) {
             context.error_message = "Key must be a string.";
             return;
@@ -212,7 +204,7 @@ void json_parse_object_value(JsonParseContext& context, JsonItem& objectItem ) {
             json_eat_colons(context);
         }
         json_eat_whitespace(context);
-        auto new_value = json_create_from_string_buffer(context);
+        JsonItem new_value = json_create_from_string_buffer(context);
         if ( new_value.type == JsonItemType::END_OF_JSON_VALUES ) {
             context.error = true;
             context.error_pos_start = context.selection_start_pos;
@@ -243,7 +235,7 @@ void json_parse_array_value(JsonParseContext& context, JsonItem& arrayItem ) {
     arrayItem.type = JsonItemType::ARRAY;
     while(true) {
         context.pos++;
-        auto new_item = json_create_from_string_buffer(context);
+        JsonItem new_item = json_create_from_string_buffer(context);
         if ( new_item.type == JsonItemType::END_OF_JSON_VALUES ) {
             return;
         }
@@ -273,8 +265,8 @@ void parse_json_text(JsonItem& textItem, std::string const & buffer, size_t& ind
 
 INTERNAL
 JsonItem json_create_from_string_buffer(JsonParseContext& context) {
-    auto in = std::stringstream {};
-    auto item = json_create_new();
+    std::stringstream in = std::stringstream {};
+    JsonItem item = json_create_new();
     json_eat_whitespace(context);
     context.selection_start_pos = context.pos;
     while( context.pos < context.buffer.size() ) {
@@ -342,14 +334,14 @@ JsonItem json_create_from_string_buffer(JsonParseContext& context) {
 // entry point
 ENTRYPOINT
 JsonItem json_create_from_string(std::string const & buffer) {
-    auto context = JsonParseContext {};
+    JsonParseContext context = JsonParseContext {};
     context.buffer = buffer;
     context.error_pos_start = 0;
     context.error_pos_end = 0;
     context.selection_start_pos = 0;
     context.selection_end_pos = 0;
     context.error = false;
-    auto item = json_create_from_string_buffer(context);
+    JsonItem item = json_create_from_string_buffer(context);
     if ( context.error ) {
         item.type = JsonItemType::ERROR;
         std::ostringstream oss;
@@ -392,7 +384,7 @@ std::string json_json_pretty_print_item(JsonItem const & json, size_t indent) {
             in << "]";
             return in.str();
         }
-        auto indentation = std::string( (indent+1) * 2, ' ');
+        std::string indentation = std::string( (indent+1) * 2, ' ');
         in << '\n';
         size_t counter = 0;
         for_each(begin(json.array), end(json.array), [&](JsonItem const & item) {
@@ -404,7 +396,7 @@ std::string json_json_pretty_print_item(JsonItem const & json, size_t indent) {
             }
             counter++;
         });
-        auto last_indentation = std::string( indent * 2, ' ');
+        std::string last_indentation = std::string( indent * 2, ' ');
         in << last_indentation << "]";
         return in.str();
     }
@@ -415,7 +407,7 @@ std::string json_json_pretty_print_item(JsonItem const & json, size_t indent) {
             in << "}";
             return in.str();
         }
-        auto indentation = std::string( (indent+1) * 2, ' ');
+        std::string indentation = std::string( (indent+1) * 2, ' ');
         in << '\n' << indentation;
         size_t counter = 0;
         for( auto const & [key,val] : json.object ) {
@@ -427,7 +419,7 @@ std::string json_json_pretty_print_item(JsonItem const & json, size_t indent) {
             }
             counter++;
         };
-        auto last_indentation = std::string( indent * 2, ' ');
+        std::string last_indentation = std::string( indent * 2, ' ');
         in << last_indentation << "}";
         return in.str();
     }
@@ -462,109 +454,109 @@ int main() {
 #if 1
     {
         std::string test = "";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "null";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "true";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "false";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "[]";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "{}";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "1234567890";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "123.4567890";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "\"a string\"";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "\"a multiline\nstring\"";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "\"a string with a \\\"quote\\\" in it\"";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "[0,1,2,3,4,5,6,7,8,9]";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "[0,1,2,3,4,5,6,7,8,[[[5]]]]";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "{ keyonly }";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "{ key: value }";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "{ key: 9 }";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "{ key: 9, 1: 14 }";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "{ key: 9, 1: [14,2,3] }";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
 
     {
         std::string test = "{ key: 9, 1: [14,2,3], \"a\":\"b\", g: h }";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
 #endif
     {
         std::string test = "\"''\"";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
     {
         std::string test = "'\"'";
-        auto json = json_create_from_string(test);
+        JsonItem json = json_create_from_string(test);
         json_pretty_print(json);
     }
 }

@@ -33,11 +33,11 @@ Request make_request(URL u, std::string verb="GET") {
 
 int main(int argc, char* argv[])
 {
-    std::cout << "==============================================" << std::endl;
-    std::cout << "(Public API call) GetApplicationEndpoint" << std::endl;
-    std::cout << "==============================================" << std::endl;
+    std::cout << "==============================================\n"
+              << "(Public API call) GetApplicationEndpoint\n"
+              << "==============================================" << std::endl;
     URL target("https://31f5ff35.eu-gb.apigw.appdomain.cloud/authtest/GetApplicationEndpoint");
-    auto request = make_request(target);
+    Request request = make_request(target);
     Response response;
     if ( http_send(request, response) != 0 ) {
         throw std::runtime_error("request failed");
@@ -45,35 +45,35 @@ int main(int argc, char* argv[])
     std::cout << "Body: " << response.body << '\n';
 
 
-    auto temporary_secret_state = generate_random_string(5);
+    std::string temporary_secret_state = generate_random_string(5);
     std::cout << "Generated secret state: " << temporary_secret_state << std::endl;
 
-    auto metadata = json_create_from_string(response.body);
+    JsonItem metadata = json_create_from_string(response.body);
     json_pretty_print(metadata);
 
     auto openid_json = metadata.object.find("openid");
-    std::cout << "OpenID: " << openid_json->second.text << std::endl;
+    std::cout << "OpenID: " << openid_json->second.text << "\n"
 
-    std::cout << "==============================================" << std::endl;
-    std::cout << "(Public API call) OpenID Metadata Call" << std::endl;
-    std::cout << "==============================================" << std::endl;
-    auto openid_request = make_request(URL(openid_json->second.text));
+              << "==============================================\n"
+              << "(Public API call) OpenID Metadata Call\n"
+              << "==============================================" << std::endl;
+    Request openid_request = make_request(URL(openid_json->second.text));
     Response openid_response;
     if ( http_send(openid_request, openid_response) != 0 ) {
         throw std::runtime_error("request failed");
     }
 
-    auto openid_metadata = json_create_from_string(openid_response.body);
+    JsonItem openid_metadata = json_create_from_string(openid_response.body);
     json_pretty_print(openid_metadata);
 
     auto authorization_endpoint_json = openid_metadata.object.find("authorization_endpoint");
-    auto authorization_endpoint = authorization_endpoint_json->second.text;
+    std::string authorization_endpoint = authorization_endpoint_json->second.text;
 
-    std::cout << "==============================================" << std::endl;
-    std::cout << "Send user to browser" << std::endl;
-    std::cout << "==============================================" << std::endl;
-    auto redirect_uri = "http://localhost:3000/ibm/cloud/appid/callback";
-    auto authorization_url = URL(authorization_endpoint);
+    std::cout << "==============================================\n"
+              << "Send user to browser\n"
+              << "==============================================" << std::endl;
+    const char* redirect_uri = "http://localhost:3000/ibm/cloud/appid/callback";
+    URL authorization_url = URL(authorization_endpoint);
     authorization_url.add_param("response_type", "code");
     authorization_url.add_param("client_id", metadata.object.find("clientId")->second.text);
     authorization_url.add_param("redirect_uri", redirect_uri);
@@ -85,10 +85,10 @@ int main(int argc, char* argv[])
     // we then need to start our web server and block
     // until we get the appropriate response
     // TODO make details no longer macros
-    std::cout << "==============================================" << std::endl;
-    std::cout << "Await response to be passed from browser to local web server" << std::endl;
-    std::cout << "==============================================" << std::endl;
-    auto oauth_response = wait_for_oauth2_redirect();
+    std::cout << "==============================================\n"
+              << "Await response to be passed from browser to local web server\n"
+              << "==============================================" << std::endl;
+    AuthenticationResponse oauth_response = wait_for_oauth2_redirect();
 
     
     // GET /ibm/cloud/appid/callback?code=fVTDrC7Dt8KyG2jCv8OQEMOCTS4TWsK9AULCmx7Dl8KXw5wKJAjDv1rDiMKCw6TCncOkIC95KFfCpDMrGmzCusOCwrB4ZcKTZSFCwrc1wrPClwVtwpzDg3knw57DoMKvwoLDrsOfWcONB8OHwprDvcKzesKTVsOSdCrCindIw4RFOTnCgjzDrwvCq15EwrZJUMK5PsOaNks8F8KVw7fCi3pCwpQEdSYGLGNAwrzDoMO5KRw2w7HDkiIIA8OtNyTDrcKOwrvCv8Otw5jDksODBcKeB3XDtcKCfcK2wr7ChHXChkDCkGDDi2XDjsO7w6DDj8KDw5hFw5jDqGoMw7LDmhnCiMKUwo4Cw5QSw4HDoy5hFklqwpJ4wo_CsRxXNw&state=3otgw HTTP/1.1
@@ -102,50 +102,50 @@ int main(int argc, char* argv[])
     // Upgrade-Insecure-Requests: 1
 
     // we still need to parse out the code and state secret.
-    std::cout << oauth_response.raw << '\n';
-    std::cout << oauth_response.code << '\n';
-    std::cout << oauth_response.secret << '\n';
+    std::cout << oauth_response.raw << '\n'
+              << oauth_response.code << '\n'
+              << oauth_response.secret << std::endl;
 
     if ( oauth_response.secret != temporary_secret_state ) {
         std::ostringstream ss;
-        ss << "oauth2 redirect contained the wrong secret state (";
-        ss << oauth_response.secret << ",";
-        ss << "expected " << temporary_secret_state << '\n';
+        ss << "oauth2 redirect contained the wrong secret state ("
+           << oauth_response.secret << ","
+           << "expected " << temporary_secret_state << '\n';
         throw std::runtime_error(ss.str());
     } else {
         std::cout << "Secret state was successfully retrieved from redirect url.\n";
     }
 
     // get the access token
-    std::cout << "==============================================" << std::endl;
-    std::cout << "(Public API+secret) GetAccessToken" << std::endl;
-    std::cout << "==============================================" << std::endl;
-    auto token_url = URL("https://31f5ff35.eu-gb.apigw.appdomain.cloud/authtest/GetAccessToken");
+    std::cout << "==============================================\n"
+              << "(Public API+secret) GetAccessToken\n"
+              << "==============================================" << std::endl;
+    URL token_url = URL("https://31f5ff35.eu-gb.apigw.appdomain.cloud/authtest/GetAccessToken");
     std::map<std::string, std::string> post_fields;
     post_fields.insert(std::make_pair("grant_type", "authorization_code"));
     post_fields.insert(std::make_pair("code", oauth_response.code));
     post_fields.insert(std::make_pair("redirect_uri", redirect_uri));
     post_fields.insert(std::make_pair("client_id", metadata.object.find("clientId")->second.text));
-    auto token_request = make_request(token_url, "POST");
+    Request token_request = make_request(token_url, "POST");
     Response token_response;
     if ( http_send(token_request, token_response, post_fields) != 0 ) {
         throw std::runtime_error("request failed to get token");
     }
     std::cout << token_response.raw << std::endl;
 
-    auto access_json = json_create_from_string(token_response.body);
-    auto access_token = access_json.object.find("access_token")->second.text;
+    JsonItem access_json = json_create_from_string(token_response.body);
+    std::string access_token = access_json.object.find("access_token")->second.text;
     std::cout << "Access Token: " << access_token << '\n';
 
     // get user details to prove we are looked and show
     // how to pass bearer token
-    std::cout << "==============================================" << std::endl;
-    std::cout << "(Published Private API) UserInfo" << std::endl;
-    std::cout << "==============================================" << std::endl;
+    std::cout << "==============================================\n"
+              << "(Published Private API) UserInfo\n"
+              << "==============================================" << std::endl;
     auto userinfo_endpoint_json = openid_metadata.object.find("userinfo_endpoint");
-    auto userinfo_endpoint = userinfo_endpoint_json->second.text;
-    auto userinfo_url = URL(userinfo_endpoint);
-    auto userinfo_request = make_request(userinfo_url);
+    std::string userinfo_endpoint = userinfo_endpoint_json->second.text;
+    URL userinfo_url = URL(userinfo_endpoint);
+    Request userinfo_request = make_request(userinfo_url);
     userinfo_request.headers.emplace_back("Content-type: application/json");
     userinfo_request.headers.push_back("Authorization: Bearer " + access_token);
     Response userinfo_response;
@@ -155,10 +155,10 @@ int main(int argc, char* argv[])
     std::cout << userinfo_response.raw << '\n';
 
     // Get contents of a private url
-    std::cout << "==============================================" << std::endl;
-    std::cout << "(Our Private API) Hello" << std::endl;
-    std::cout << "==============================================" << std::endl;
-    auto private_request = make_request(URL("https://31f5ff35.eu-gb.apigw.appdomain.cloud/private-authtest/Hello"));
+    std::cout << "==============================================\n"
+              << "(Our Private API) Hello\n"
+              << "==============================================" << std::endl;
+    Request private_request = make_request(URL("https://31f5ff35.eu-gb.apigw.appdomain.cloud/private-authtest/Hello"));
     private_request.headers.emplace_back("Content-type: application/json");
     private_request.headers.push_back("Authorization: Bearer " + access_token);
     Response private_response;

@@ -105,21 +105,21 @@ std::string create_message(Request const &request)
 {
     //char *message_fmt = "GET / HTTP/1.0\r\n\r\n";
     std::ostringstream oss;
-    oss << request.verb;
-    oss << " ";
-    oss << request.uri.path;
+    oss << request.verb
+        << " "
+        << request.uri.path;
     if ( !request.uri.querystring.empty() ) {
         oss << "?" << request.uri.querystring;
     }
-    oss << " ";
+    oss << " "
     // @TODO add in support for querystring/parameters
-    oss << request.uri.protocol;
-    oss << "/";
-    oss << request.uri.protocol_version;
-    oss << "\r\n";
-    for( auto& header : request.headers ) {
+        << request.uri.protocol
+        << "/"
+        << request.uri.protocol_version
+        << "\r\n";
+    for( const std::string& header : request.headers )
         oss << header << "\r\n";
-    }
+
     oss << "\r\n";
     return oss.str();
 }
@@ -271,8 +271,8 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
     if ( !content.empty() ) {
         message += content + "\r\n";
     }
-    std::cout << "Target: " << create_host(request) << '\n';
-    std::cout << "Sending: " << message;
+    std::cout << "Target: " << create_host(request) << '\n'
+              << "Sending: " << message;
 
     struct hostent *server;
     struct sockaddr_in serv_addr;
@@ -399,7 +399,7 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
             if (ssl_client.is_valid())
             {
                 // https://www.openssl.org/docs/man1.1.1/man3/SSL_get_error.html
-                auto err = SSL_get_error(ssl_client.session(), bytes);
+                int err = SSL_get_error(ssl_client.session(), bytes);
                 switch (err)
                 {
                 case SSL_ERROR_WANT_READ:
@@ -457,23 +457,23 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
         }
         if (response.raw[ii] == '\r' && response.raw[ii + 1] == '\n')
         {
-            auto header = response.raw.substr(pos, ii - pos);
+            std::basic_string header = response.raw.substr(pos, ii - pos);
             std::cout << "HEADER: " << header << std::endl;
             response.headers.push_back(header);
             if (response.headers.size() == 1)
             {
-                auto start = header.find_first_of(' ') + 1;
-                auto end = header.find_last_of(' ');
-                auto status = header.substr(start, end - start);
+                size_t start = header.find_first_of(' ') + 1,
+                       end = header.find_last_of(' ');
+                std::basic_string status = header.substr(start, end - start);
                 response.status = std::stol(status);
             }
-            auto lc_header = header;
+            std::basic_string lc_header = header;
             std::transform(lc_header.begin(), lc_header.end(), lc_header.begin(),
                            [](unsigned char c) { return std::tolower(c); });
             if (lc_header.find("content-type: ") == 0)
             {
-                auto start = lc_header.find(' ') + 1;
-                auto end = lc_header.find(';');
+                size_t start = lc_header.find(' ') + 1,
+                       end = lc_header.find(';');
                 if (end == std::string::npos)
                 {
                     end = lc_header.size();
@@ -490,7 +490,7 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
 #ifdef TEST_TINY_WEB_CLIENT
 int main()
 {
-    auto req = Request{};
+    Request req = Request{};
     req.verb = "GET";
     req.uri.use_ssl = true;
     req.uri.protocol = "HTTP";
@@ -500,7 +500,7 @@ int main()
     req.uri.port = 443;
     req.uri.path = "/authtest/GetApplicationEndpoint";
     req.headers.push_back("HOST: 31f5ff35.eu-gb.apigw.appdomain.cloud");
-    auto resp = Response{};
+    Response resp = Response{};
 
     if (http_send(req, resp))
     {
@@ -508,9 +508,9 @@ int main()
     }
     else
     {
-        std::cout << resp.status << std::endl;
-        std::cout << resp.content_type << std::endl;
-        std::cout << resp.body << std::endl;
+        std::cout << resp.status << "\n"
+                  << resp.content_type << "\n"
+                  << resp.body << std::endl;
     }
 }
 #endif
