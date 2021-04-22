@@ -354,7 +354,7 @@ JsonItem json_create_from_string(std::string const & buffer) {
         item.type = JsonItemType::ERROR;
         std::ostringstream oss;
         oss << "Error at " << context.error_pos_start << "," << context.error_pos_end << ": " << context.error_message;
-        item.text = oss.str();;
+        item.text = oss.str();
     }
     return item;
 }

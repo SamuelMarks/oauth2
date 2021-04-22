@@ -6,12 +6,15 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
-#include <sstream>
 #include <cstdio>       /* printf, sprintf */
 #include <cstdlib>      /* exit */
 #include <cstring>      /* memcpy, memset */
 
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#include <io.h>
+// #include <winsock.h>
+#include <winsock2.h>
+
 // SSL
 #include <Ws2tcpip.h>
 #else
@@ -19,10 +22,6 @@
 #include <sys/socket.h> /* socket, connect */
 #include <netinet/in.h> /* struct sockaddr_in, struct sockaddr */
 #include <netdb.h>      /* struct hostent, gethostbyname */
-
-// SSL
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #endif
 
 #include "config.h"
@@ -127,7 +126,7 @@ public:
     {
     }
 
-    bool is_valid() const
+    [[nodiscard]] bool is_valid() const
     {
         return valid_;
     }
@@ -153,7 +152,7 @@ public:
         return true;
     }
 
-    void display_errors() const {
+    static void display_errors() {
         int err;
         while ((err = ERR_get_error())) {
             char *str = ERR_error_string(err, 0);
@@ -178,7 +177,7 @@ public:
 
 private:
     // make this unable to be copied
-    SSLClient(SSLClient const &);
+    SSLClient(SSLClient const &) = delete;
     SSLClient &operator=(const SSLClient &);
 
     // private variables that we will clean up on destruction

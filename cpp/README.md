@@ -13,8 +13,17 @@ cmake --build .
 ## Dependencies
 
   - [CMake](https://cmake.org)
+    - macOS: `brew install openssl` (with [brew](https://brew.sh))
+    - Linux: Install `libssl-dev` or `openssl-devel` with your package manager, e.g., `apt`, `dnf`, `yum`, `apk`
+    - Windows: various ways. E.g., [vcpkg](https://github.com/microsoft/vcpkg) or [Conan](https://conan.io). Note: this option is also cross-platform.
   - [OpenSSL](https://www.openssl.org) (or a derivative/fork with the same namespace, like [LibreSSL](https://www.libressl.org) or [BoringSSL](https://boringssl.googlesource.com/boringssl))
+    - macOS: `brew install openssl`
+    - Linux: Install `libssl-dev` or `openssl-devel` with your package manager, e.g., `apt`, `dnf`, `yum`, `apk`
+    - Windows: various ways. E.g., [vcpkg](https://github.com/microsoft/vcpkg) or [Conan](https://conan.io). 
   - C++—and C—compiler toolchain. Tested with: [clang](https://clang.llvm.org), [g++](https://gcc.gnu.org), and [MSVC](https://docs.microsoft.com/en-us/cpp).
+    - macOS: `xcode-select --install`
+    - Linux: `apt install build-essential` on Debian based distributions like Ubuntu; or just install `gcc g++ make` with your favourite package manager
+    - Windows: Install [MinGW](http://mingw-w64.org) or [MSVC](https://docs.microsoft.com/en-us/cpp). You'll need the [Windows SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk) also.
 
 ## Tested operating systems (OSs)
 
