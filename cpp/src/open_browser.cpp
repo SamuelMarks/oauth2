@@ -8,6 +8,8 @@
 #elif defined(macintosh) || defined(Macintosh) || defined(__APPLE__) && defined(__MACH__)
 #include <CoreFoundation/CFBundle.h>
 #include <ApplicationServices/ApplicationServices.h>
+#elif defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#include <shellapi.h>
 #endif
 
 #ifdef TEST_OPEN_BROWSER
@@ -43,11 +45,13 @@ void open_browser(URL& url)
     std::cout << browser_cmd_string << std::endl;
     (void)system(browser_cmd_string.c_str());
 
-#elif defined(macintosh) || defined(Macintosh) || defined(__APPLE__) && defined(__MACH__)
+#else
 
     std::ostringstream _url;
     _url << url;
     auto url_str = _url.str();
+
+#if defined(macintosh) || defined(Macintosh) || defined(__APPLE__) && defined(__MACH__)
     CFURLRef cf_url = CFURLCreateWithBytes (
             NULL,                        // allocator
             (UInt8*)url_str.c_str(),     // URLBytes
@@ -57,6 +61,10 @@ void open_browser(URL& url)
     );
     LSOpenCFURLRef(cf_url,0);
     CFRelease(cf_url);
+#elif defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+    ShellExecuteA(NULL, "open", url_str.c_str(), NULL, NULL, SW_SHOWNORMAL);
+#endif
+
 #endif
 }
 

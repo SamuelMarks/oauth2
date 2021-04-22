@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
     auto userinfo_endpoint = userinfo_endpoint_json->second.text;
     auto userinfo_url = URL(userinfo_endpoint);
     auto userinfo_request = make_request(userinfo_url);
-    userinfo_request.headers.push_back("Content-type: application/json");
+    userinfo_request.headers.emplace_back("Content-type: application/json");
     userinfo_request.headers.push_back("Authorization: Bearer " + access_token);
     Response userinfo_response;
     if ( http_send(userinfo_request, userinfo_response) ) {
@@ -159,11 +159,11 @@ int main(int argc, char* argv[])
     std::cout << "(Our Private API) Hello" << std::endl;
     std::cout << "==============================================" << std::endl;
     auto private_request = make_request(URL("https://31f5ff35.eu-gb.apigw.appdomain.cloud/private-authtest/Hello"));
-    private_request.headers.push_back("Content-type: application/json");
+    private_request.headers.emplace_back("Content-type: application/json");
     private_request.headers.push_back("Authorization: Bearer " + access_token);
     Response private_response;
     if ( http_send(private_request, private_response) ) {
         throw std::runtime_error("request failed to get userinfo");
     }
     std::cout << private_response.raw << '\n';
-}   
+}
