@@ -13,8 +13,6 @@ include(CheckSymbolExists)
 # CMake options that can be overridden at configuration time #
 ##############################################################
 
-option(USE_LIBCURL "Enable libcurl (defaults to `ON` on non-Windows)" OFF)
-
 # "Crypto library to use, defaults to Linux,BSD,SunOS: OpenSSL; Windows: STunnel; macOS: LibreSSL"
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT DEFINED CRYPTO_LIB)
     check_include_files("CommonCrypto/CommonCrypto.h;CommonCrypto/CommonDigest.h" HAVE_COMMON_CRYPTO_H)
@@ -94,38 +92,28 @@ if (CRYPTO_LIB STREQUAL "OpenSSL")
 elseif (CRYPTO_LIB STREQUAL "LibreSSL")
     find_package(LibreSSL REQUIRED)
 elseif (CRYPTO_LIB STREQUAL "CommonCrypto" OR CRYPTO_LIB STREQUAL "OpenSSL")
-    # pass
+    message(FATAL_ERROR "TODO: Implement with CommonCrypto")
 elseif (CRYPTO_LIB STREQUAL "WinCrypt")
-    # pass
+    message(FATAL_ERROR "TODO: Implement with WinCrypt")
 elseif (NOT DEFINED CRYPTO_LIB)
     message(FATAL_ERROR "CRYPTO_LIB undefined")
 else ()
-    message("CRYPTO_LIB is ${CRYPTO_LIB}")
-endif ()
-
-########################
-# HTTP/HTTPS libraries #
-########################
-
-if ((CMAKE_SYSTEM_NAME STREQUAL "FreeBSD"
-        OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
-        AND USE_LIBCURL STREQUAL "OFF")
-    set(USE_LIBFETCH 1)
-elseif (CMAKE_SYSTEM_NAME STREQUAL "OpenBSD" AND USE_LIBCURL STREQUAL "OFF")
-    set(USE_OPENBSD_FTP 1)
-elseif (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(USE_WININET 1)
-else ()
-    set(USE_LIBCURL 1)
-    include(cmake/FindCurlCustom.cmake)
-    get_curl(CURL_LINK_LIBRARIES)
+    message(FATAL_ERROR "TODO: Implement with ${CRYPTO_LIB}")
 endif ()
 
 ################################
 # Configure file (interpolate) #
 ################################
 
-configure_file(src/config.h.in ${PROJECT_BINARY_DIR}/src/config.h @ONLY)
+if (DEFINED STACK_SIZE)
+    # pass
+elseif (WIN32)
+    set(STACK_SIZE 16384)
+else ()
+    set(STACK_SIZE 65535)
+endif ()
+
+configure_file("src/config.h.in" "${PROJECT_BINARY_DIR}/src/config.h" @ONLY)
 
 #############################################
 # Compiler, library, and exec configuration #
@@ -149,25 +137,18 @@ else ()
     endif ()
 endif ()
 
-add_executable(${PROJECT_NAME} "${src}")
-# set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "oauth2_cpp")
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR}/src)
-
-if (DEFINED CURL_LINK_LIBRARIES)
-    target_link_libraries(${PROJECT_NAME} ${CURL_LINK_LIBRARIES})
-elseif (DEFINED USE_WININET)
-    target_link_libraries("${PROJECT_NAME}" wininet)
-elseif (DEFINED USE_LIBFETCH)
-    target_link_libraries("${PROJECT_NAME}" fetch)
-endif ()
+add_executable("${PROJECT_NAME}" "${src}")
+target_include_directories("${PROJECT_NAME}" PUBLIC "${PROJECT_BINARY_DIR}/src")
 
 if (DEFINED OPENSSL_LIBRARIES)
-    target_link_libraries(${PROJECT_NAME} OpenSSL::SSL ${OPENSSL_LIBRARIES})
-    target_include_directories(${PROJECT_NAME} PRIVATE ${OPENSSL_INCLUDE_DIR})
+    target_link_libraries("${PROJECT_NAME}" OpenSSL::SSL "${OPENSSL_LIBRARIES}")
+    target_include_directories("${PROJECT_NAME}" PRIVATE "${OPENSSL_INCLUDE_DIR}")
 endif ()
 
 if (APPLE) # or if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     find_library(CORE_FOUNDATION_LIBRARY CoreFoundation ONLY)
     find_library(APPLICATION_SERVICES_LIBRARY ApplicationServices ONLY)
     target_link_libraries("${PROJECT_NAME}" "${CORE_FOUNDATION_LIBRARY}" "${APPLICATION_SERVICES_LIBRARY}")
+elseif(WIN32)
+    target_link_libraries("${PROJECT_NAME}" wsock32 ws2_32)
 endif()

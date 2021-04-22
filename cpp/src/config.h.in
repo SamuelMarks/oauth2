@@ -13,6 +13,7 @@
 #cmakedefine USE_LIBRESSL @USE_LIBRESSL@
 #cmakedefine USE_COMMON_CRYPTO @USE_COMMON_CRYPTO@
 #cmakedefine USE_WINCRYPT @USE_WINCRYPT@
+#define STACK_SIZE @STACK_SIZE@
 
 #define _@TARGET_ARCH@_
 

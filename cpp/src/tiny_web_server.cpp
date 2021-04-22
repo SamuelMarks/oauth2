@@ -4,11 +4,32 @@
 #include <sstream>
 #include <cstdio>
 #include <cstdlib>
-#include <unistd.h>
 #include <sys/types.h>
+
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#include <intrin.h>
+
+#ifndef _WIN64
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#endif
+#include <winsock2.h>
+#define close closesocket
+#define write _write
+#define read _read
+
+void err(int code, const char *message) {
+    fprintf(stderr, message);
+    exit(code);
+}
+
+#else
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <err.h>
+#endif
+
 #include "macros.h"
 
 // this is what we would define in our authentication settings in App ID
@@ -73,11 +94,11 @@ AuthenticationResponse wait_for_oauth2_redirect()
     struct sockaddr_in svr_addr, cli_addr;
     socklen_t sin_len = sizeof(cli_addr);
 
-    int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    int server_socket = (int)socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0)
         err(1, "can't open socket");
 
-    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &socket_options, sizeof(int));
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&socket_options, sizeof(int));
 
     int port = PORT_TO_BIND;
     svr_addr.sin_family = AF_INET;
@@ -94,7 +115,7 @@ AuthenticationResponse wait_for_oauth2_redirect()
     bool ok = false;
     while (!ok)
     {
-        client_file_descriptor = accept(server_socket, (struct sockaddr *)&cli_addr, &sin_len);
+        client_file_descriptor = (int)accept(server_socket, (struct sockaddr *)&cli_addr, &sin_len);
         printf("got incoming connection\n");
 
         if (client_file_descriptor == -1)
@@ -125,8 +146,8 @@ AuthenticationResponse wait_for_oauth2_redirect()
             continue;
         }
         std::string incoming_message = incoming_datastream.str();
-        std::cout << "Received:\n";
-        std::cout << incoming_message;
+        std::cout << "Received:\n"
+                  << incoming_message;
 
         // check if this is a GET method
         if ( incoming_message[0] != 'G' ||
@@ -137,20 +158,20 @@ AuthenticationResponse wait_for_oauth2_redirect()
         }  
 
         // check the URL
-        auto start = incoming_message.find_first_of(' ')+1;
-        auto end_of_target_url = incoming_message.find_first_of(' ', start);
-        auto target_url = incoming_message.substr(start, end_of_target_url-start);
-        auto querystring = incoming_message.find_first_of('?', start);
-        auto fragment = incoming_message.find_first_of('#', start);
-        auto end_of_path = MIN(end_of_target_url, querystring);
+        size_t start = incoming_message.find_first_of(' ')+1,
+               end_of_target_url = incoming_message.find_first_of(' ', start);
+        std::string target_url = incoming_message.substr(start, end_of_target_url-start);
+        size_t querystring = incoming_message.find_first_of('?', start),
+               fragment = incoming_message.find_first_of('#', start),
+               end_of_path = MIN(end_of_target_url, querystring);
         end_of_path = MIN(end_of_path, fragment);
-        auto path = incoming_message.substr(start, end_of_path - start);
+        std::string path = incoming_message.substr(start, end_of_path - start);
         if ( path == EXPECTED_PATH && querystring != std::string::npos ) {
             ok = true;
             authentication_response.raw = incoming_message;
             // the code and state are passed as GET parameters
-            auto end_of_qs = MIN(end_of_target_url, fragment);
-            auto qs = incoming_message.substr(querystring+1, end_of_qs - querystring-1);
+            size_t end_of_qs = MIN(end_of_target_url, fragment);
+            std::string qs = incoming_message.substr(querystring+1, end_of_qs - querystring-1);
             auto params = split_querystring(qs);
             // note we do not have to check if the map contains these,
             // if they do not exist they will return the blank string.
