@@ -1,5 +1,8 @@
 C++ Version of OAuth2 authentication
 ====================================
+![C++](https://img.shields.io/badge/C%2B%2B-17%20|%2020-blue.svg)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![CMake](https://img.shields.io/badge/builder-CMake-blue.svg)]((https://cmake.org))
 
 ## Build
 
@@ -8,6 +11,18 @@ To compile and run the main oauth2 example you can use this command:
 ```
 cmake -DCRYPTO_LIB='OpenSSL' ..
 cmake --build .
+```
+
+### Configuration
+
+Additional flags you can provide are found in the [`CMakeLists.txt`](CMakeLists.txt). For example:
+```
+-DSTACK_SIZE=16384
+-DSERVER_ADDR='127.0.0.1'
+-DSERVER_HOST='localhost'
+-DPORT_TO_BIND=3000
+-DMSG_BACKLOG=5
+-DEXPECTED_PATH='/ibm/cloud/appid/callback'
 ```
 
 ## Dependencies
@@ -29,7 +44,7 @@ cmake --build .
 
   - Linux
   - macOS
-  - Windows (WiP)
+  - Windows
 
 ## Libraries
 

@@ -1,3 +1,6 @@
+#ifndef OAUTH2_TINY_WEB_CLIENT_H
+#define OAUTH2_TINY_WEB_CLIENT_H
+
 // SSL Example Reference: https://stackoverflow.com/questions/41229601/openssl-in-c-socket-connection-https-client
 // Client Reference: https://stackoverflow.com/questions/22077802/simple-c-example-of-doing-an-http-post-and-consuming-the-response
 #include <algorithm>
@@ -11,7 +14,7 @@
 #include <cstring>      /* memcpy, memset */
 #include "config.h"
 
-#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 #include <io.h>
@@ -66,11 +69,6 @@ struct Request
     std::vector<std::string> headers;
     std::map<std::string, std::string> fields;
 };
-
-std::string create_uri(URI uri)
-{
-    return {};
-}
 
 struct ResponseError
 {
@@ -159,9 +157,8 @@ public:
     }
 
     static void display_errors() {
-        int err;
-        while ((err = ERR_get_error())) {
-            char *str = ERR_error_string(err, 0);
+        for (auto err = ERR_get_error(); err; err = ERR_get_error()) {
+            char *str = ERR_error_string(err, nullptr);
             if (!str)
                 return;
             printf("%s", str);
@@ -181,10 +178,11 @@ public:
         shutdown();
     }
 
-private:
     // make this unable to be copied
     SSLClient(SSLClient const &) = delete;
-    SSLClient &operator=(const SSLClient &);
+    SSLClient &operator=(const SSLClient &) = delete;
+
+private:
 
     // private variables that we will clean up on destruction
     SSL_CTX *context_;
@@ -242,7 +240,7 @@ private:
     }
 };
 
-int http_send(Request&request, Response &response, std::map<std::string, std::string> post_fields = {})
+int http_send(Request&request, Response &response, const std::map<std::string, std::string> &post_fields = {})
 {
     std::string content;
     if ( request.verb == "POST" ) {
@@ -250,22 +248,23 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
             throw std::runtime_error("request was POST, but no post fields given to http_send");
         }
         std::ostringstream ss;
-        size_t counter = 0;
-        for( auto const & [key, value] : post_fields) {
-            // TODO encode value for special characters
-            ss << key << "=" << value ;
-            if ( counter < post_fields.size()-1 ) {
-                ss << "&";
+        {
+            size_t counter = 0;
+            for (auto const &[key, value] : post_fields) {
+                // TODO encode value for special characters
+                ss << key << "=" << value;
+                if (counter < post_fields.size() - 1) {
+                    ss << "&";
+                }
+                counter++;
             }
-            counter++;
         }
         content = ss.str();
         request.headers.emplace_back("Content-Type: application/x-www-form-urlencoded");
         std::cout << "POST Data: " << content << '\n';
-        std::ostringstream header_in;
-        header_in << "Content-Length: " << content.size();
-        request.headers.push_back(header_in.str());
-        
+
+        request.headers.push_back(static_cast<const std::ostringstream&>(
+                std::ostringstream() << "Content-Length: " << content.size()).str());
     }
     std::string message = create_message(request);
     if ( !content.empty() ) {
@@ -274,8 +273,17 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
     std::cout << "Target: " << create_host(request) << '\n'
               << "Sending: " << message;
 
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+    WSADATA wsaData;
+    int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
+    if (iResult != 0) {
+        std::cerr << "WSAStartup returned: " << iResult << std::endl;
+        return iResult;
+    }
+#endif
+
     struct hostent *server;
-    struct sockaddr_in serv_addr;
+    struct sockaddr_in serv_addr{};
     SSLClient ssl_client;
 
     /* create the socket */
@@ -284,6 +292,9 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
     {
         response.error.message = "ERROR opening socket";
         response.error.code = 1001;
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+        std::cerr << "WSAGetLastError: " << WSAGetLastError() << std::endl;
+#endif
         return response.error.code;
     }
 
@@ -444,10 +455,11 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
 
     /* close the socket */
     close(socket_file_descriptor);
-
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+    WSACleanup();
+#endif
     response.raw = incoming_data.str();
-    size_t pos = 0;
-    for (size_t ii = 0; ii < response.raw.size(); ii++)
+    for (size_t ii = 0, pos=0; ii < response.raw.size(); ii++)
     {
         if (response.raw[ii] == '\r' && response.raw[ii + 1] == '\n' &&
             response.raw[ii + 2] == '\r' && response.raw[ii + 3] == '\n')
@@ -457,23 +469,24 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
         }
         if (response.raw[ii] == '\r' && response.raw[ii + 1] == '\n')
         {
-            std::basic_string header = response.raw.substr(pos, ii - pos);
+            std::string header = response.raw.substr(pos, ii - pos);
             std::cout << "HEADER: " << header << std::endl;
             response.headers.push_back(header);
             if (response.headers.size() == 1)
             {
                 size_t start = header.find_first_of(' ') + 1,
                        end = header.find_last_of(' ');
-                std::basic_string status = header.substr(start, end - start);
+                std::string status = header.substr(start, end - start);
                 response.status = std::stol(status);
             }
-            std::basic_string lc_header = header;
+            std::string lc_header = header;
             std::transform(lc_header.begin(), lc_header.end(), lc_header.begin(),
                            [](unsigned char c) { return std::tolower(c); });
             if (lc_header.find("content-type: ") == 0)
             {
-                size_t start = lc_header.find(' ') + 1,
-                       end = lc_header.find(';');
+                const size_t start = lc_header.find(' ') + 1;
+                /* std::remove_const<decltype(std::string::npos)>::type */
+                size_t end = lc_header.find(';');
                 if (end == std::string::npos)
                 {
                     end = lc_header.size();
@@ -496,10 +509,10 @@ int main()
     req.uri.protocol = "HTTP";
     req.uri.protocol_version = "1.0";
     // https://31f5ff35.eu-gb.apigw.appdomain.cloud/authtest/GetApplicationEndpoint
-    req.uri.host = "31f5ff35.eu-gb.apigw.appdomain.cloud";
+    req.uri.host = STR(API_HOST);
     req.uri.port = 443;
-    req.uri.path = "/authtest/GetApplicationEndpoint";
-    req.headers.push_back("HOST: 31f5ff35.eu-gb.apigw.appdomain.cloud");
+    req.uri.path = STR(API_APPLICATION_ENDPOINT_PATH);
+    req.headers.push_back("HOST: " + STR(API_HOST));
     Response resp = Response{};
 
     if (http_send(req, resp))
@@ -515,6 +528,8 @@ int main()
 }
 #endif
 
-#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
 #undef _WINSOCK_DEPRECATED_NO_WARNINGS
 #endif
+
+#endif /* OAUTH2_TINY_WEB_CLIENT_H */
