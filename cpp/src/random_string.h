@@ -1,3 +1,6 @@
+#ifndef OAUTH2_RANDOM_STRING_H
+#define OAUTH2_RANDOM_STRING_H
+
 // Reference: https://stackoverflow.com/questions/440133/how-do-i-create-a-random-alpha-numeric-string-in-c
 
 #include <iostream>
@@ -33,3 +36,5 @@ std::string generate_random_string(unsigned int required_length) {
     }
     return tmp_s;
 }
+
+#endif /* OAUTH2_RANDOM_STRING_H */

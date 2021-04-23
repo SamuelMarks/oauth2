@@ -17,4 +17,11 @@
 
 #define _@TARGET_ARCH@_
 
+/* this is what we would define in our authentication settings in App ID */
+#define SERVER_ADDR "@SERVER_ADDR@"
+#define SERVER_HOST "@SERVER_HOST@"
+#define PORT_TO_BIND @PORT_TO_BIND@
+#define MSG_BACKLOG @MSG_BACKLOG@
+#define EXPECTED_PATH "@EXPECTED_PATH@"
+
 #endif /* OAUTH2_CPP_CONFIG_H */

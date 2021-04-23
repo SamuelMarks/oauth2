@@ -1,9 +1,12 @@
+#ifndef OAUTH2_CPP_URL_H
+#define OAUTH2_CPP_URL_H
+
 #include <iostream>
 #include <cstdlib>
 #include <sstream>
 #include <map>
 
-#include "char_tests.cpp"
+#include "char_utils.h"
 #include "macros.h"
 
 // In this case we are going to define a type URL that
@@ -15,7 +18,7 @@ class URL
 public:
     URL() = default;
 
-    explicit URL(std::string url)
+    explicit URL(const std::string &url)
     {
         validate_(url);
     }
@@ -150,8 +153,8 @@ private:
         }
         pos++;
         size_t end_of_domain = url.find_first_of('/', pos),
-               querystring_pos = url.find_first_of('?', pos),
-               fragment_pos = url.find_first_of('#', pos);
+                querystring_pos = url.find_first_of('?', pos),
+                fragment_pos = url.find_first_of('#', pos);
         end_of_domain = MIN(end_of_domain, fragment_pos);
         end_of_domain = MIN(end_of_domain, querystring_pos);
         std::string this_domain = url.substr(pos, end_of_domain - pos);
@@ -191,15 +194,15 @@ private:
                 {
                     throw std::runtime_error(static_cast<const std::ostringstream&>(
                                                      std::ostringstream()
-                                                     << "'.'' cannot appear at start or end of domain in url '"
-                                                     << url << "'").str());
+                                                             << "'.'' cannot appear at start or end of domain in url '"
+                                                             << url << "'").str());
                 }
                 if (!is_domain_character(this_domain[ii]))
                 {
                     throw std::runtime_error(static_cast<const std::ostringstream&>(
                                                      std::ostringstream()
-                                                     << "invalid character '" << this_domain[ii]
-                                                     << "' found in domain of '" << url << "'").str());
+                                                             << "invalid character '" << this_domain[ii]
+                                                             << "' found in domain of '" << url << "'").str());
                 }
             }
         }
@@ -218,7 +221,7 @@ private:
             return pos;
         }
         size_t querystring_pos = url.find_first_of('?', pos),
-               fragment_pos = url.find_first_of('#', pos);
+                fragment_pos = url.find_first_of('#', pos);
         if (querystring_pos == std::string::npos && fragment_pos == std::string::npos)
         {
             path = url.substr(pos);
@@ -305,7 +308,7 @@ private:
     std::string encode_querystring_(std::string const &url)
     {
         size_t querystring_pos_start = url.find_first_of('?'),
-               querystring_pos_end = url.find_first_of('#', querystring_pos_start);
+                querystring_pos_end = url.find_first_of('#', querystring_pos_start);
         // check querystring and convert any special characters to the appropriate
         // %XX code.
         if (querystring_pos_start == std::string::npos)
@@ -354,13 +357,13 @@ private:
         }
         std::string encoded_query_string = ss.str();
         querystring = encoded_query_string;
-        return std::move(encoded_query_string);
+        return encoded_query_string;
     }
 
     size_t set_fragment_(std::string const &url, const size_t pos)
     {
         size_t fragment_pos_start = url.find_first_of('#'),
-               fragment_pos_end = url.find_first_of('?', fragment_pos_start);
+                fragment_pos_end = url.find_first_of('?', fragment_pos_start);
         if (fragment_pos_start == std::string::npos)
         {
             return pos;
@@ -532,3 +535,5 @@ int main()
     }
 }
 #endif
+
+#endif /* OAUTH2_CPP_URL_H */

@@ -1,3 +1,5 @@
+#ifndef OAUTH2_TINY_WEB_SERVER_H
+#define OAUTH2_TINY_WEB_SERVER_H
 // Reference: https://rosettacode.org/wiki/Hello_world/Web_server#C
 #include <string>
 #include <iostream>
@@ -5,6 +7,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <sys/types.h>
+
+#include "config.h"
 
 #if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
 #include <intrin.h>
@@ -31,13 +35,6 @@ void err(int code, const char *message) {
 #endif
 
 #include "macros.h"
-
-// this is what we would define in our authentication settings in App ID
-#define SERVER_ADDR "127.0.0.1"
-#define SERVER_HOST "localhost"
-#define PORT_TO_BIND 3000
-#define MSG_BACKLOG 5
-#define EXPECTED_PATH "/ibm/cloud/appid/callback"
 
 char responseOk[] = "HTTP/1.0 200 OK\r\n"
                     "Content-Type: text/plain\r\n"
@@ -89,9 +86,9 @@ AuthenticationResponse wait_for_oauth2_redirect()
 {
     AuthenticationResponse authentication_response;
     int socket_options = SO_DEBUG;
-    int client_file_descriptor = 0;
+    int client_file_descriptor;
 
-    struct sockaddr_in svr_addr, cli_addr;
+    struct sockaddr_in svr_addr{}, cli_addr{};
     socklen_t sin_len = sizeof(cli_addr);
 
     int server_socket = (int)socket(AF_INET, SOCK_STREAM, 0);
@@ -127,7 +124,7 @@ AuthenticationResponse wait_for_oauth2_redirect()
         // keep on reading until we have digest everything
         std::ostringstream incoming_datastream;
         char buffer[65535];
-        int bytes=0;
+        int bytes;
         do {
             bytes = read(client_file_descriptor, buffer, 65535);
             if ( bytes > 0 ) {
@@ -196,3 +193,5 @@ int main()
     wait_for_oauth2_redirect();
 }
 #endif
+
+#endif /* OAUTH2_TINY_WEB_SERVER_H */

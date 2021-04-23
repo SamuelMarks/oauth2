@@ -1,3 +1,6 @@
+#ifndef OAUTH2_JSON_PARSER_H
+#define OAUTH2_JSON_PARSER_H
+
 // ----------------------------------------------------------
 // Tiny JSON Parser
 // Written in a C-style rather than OOP.
@@ -352,74 +355,76 @@ JsonItem json_create_from_string(std::string const & buffer) {
 INTERNAL
 std::string json_json_pretty_print_item(JsonItem const & json, const size_t indent) {
     switch( json.type ) {
-    case JsonItemType::EMPTY:
-        return {};
-    case JsonItemType::NULL_VALUE:
-        return "null";
-    case JsonItemType::TRUE_VALUE:
-        return "true";
-    case JsonItemType::FALSE_VALUE:
-        return "false";
-    case JsonItemType::TEXT:{
-        return static_cast<const std::ostringstream&>(
-                std::ostringstream() << '"' << json.text << '"').str();
-    }
-    case JsonItemType::INTEGER:
-    case JsonItemType::FLOAT:
-        return std::to_string(json.integer);
-    case JsonItemType::ARRAY:{
-        std::ostringstream in;
-        in << "[";
-        if ( json.array.empty() ) {
-            in << "]";
+        case JsonItemType::EMPTY:
+            return {};
+        case JsonItemType::NULL_VALUE:
+            return "null";
+        case JsonItemType::TRUE_VALUE:
+            return "true";
+        case JsonItemType::FALSE_VALUE:
+            return "false";
+        case JsonItemType::TEXT:
+            return static_cast<const std::ostringstream &>(
+                    std::ostringstream() << '"' << json.text << '"').str();
+        case JsonItemType::INTEGER:
+            return std::to_string(json.integer);
+        case JsonItemType::FLOAT:
+            return std::to_string(json.real);
+        case JsonItemType::ARRAY: {
+            std::ostringstream in;
+            in << "[";
+            if (json.array.empty()) {
+                in << "]";
+                return in.str();
+            }
+            const std::string indentation = std::string((indent + 1) * 2, ' ');
+            in << '\n';
+            size_t counter = 0;
+            for_each(begin(json.array), end(json.array), [&](JsonItem const &item) {
+                in << indentation << json_json_pretty_print_item(item, indent + 1);
+                if (counter < json.array.size() - 1) {
+                    in << ",\n";
+                } else {
+                    in << '\n';
+                }
+                counter++;
+            });
+            const std::string last_indentation = std::string(indent * 2, ' ');
+            in << last_indentation << "]";
             return in.str();
         }
-        const std::string indentation = std::string( (indent+1) * 2, ' ');
-        in << '\n';
-        size_t counter = 0;
-        for_each(begin(json.array), end(json.array), [&](JsonItem const & item) {
-            in << indentation << json_json_pretty_print_item(item, indent+1);
-            if ( counter < json.array.size()-1 ) {
-                in << ",\n";
-            } else {
-                in << '\n';
+        case JsonItemType::OBJECT: {
+            std::ostringstream in;
+            in << "{";
+            if (json.object.empty()) {
+                in << "}";
+                return in.str();
             }
-            counter++;
-        });
-        const std::string last_indentation = std::string( indent * 2, ' ');
-        in << last_indentation << "]";
-        return in.str();
-    }
-    case JsonItemType::OBJECT:{
-        std::ostringstream in;
-        in << "{";
-        if ( json.object.empty() ) {
-            in << "}";
+            const std::string indentation = std::string((indent + 1) * 2, ' ');
+            in << '\n' << indentation;
+            {
+                size_t counter = 0;
+                for (auto const &[key, val] : json.object) {
+                    in << key << " : " << json_json_pretty_print_item(val, indent + 1);
+                    if (counter < json.object.size() - 1) {
+                        in << ",\n" << indentation;
+                    } else {
+                        in << "\n";
+                    }
+                    counter++;
+                }
+            }
+            const std::string last_indentation = std::string(indent * 2, ' ');
+            in << last_indentation << "}";
             return in.str();
         }
-        const std::string indentation = std::string( (indent+1) * 2, ' ');
-        in << '\n' << indentation;
-        size_t counter = 0;
-        for( auto const & [key,val] : json.object ) {
-            in << key << " : " << json_json_pretty_print_item(val, indent+1);
-            if ( counter < json.object.size()-1 ) {
-                in << ",\n" << indentation;
-            } else {
-                in << "\n";
-            }
-            counter++;
-        };
-        const std::string last_indentation = std::string( indent * 2, ' ');
-        in << last_indentation << "}";
-        return in.str();
-    }
-    case JsonItemType::END_OF_JSON_VALUES:
-        return "<EMPTY>";
-    case JsonItemType::ERROR:
-        return json.text;
-    default:
-        return static_cast<const std::ostringstream&>(
-                std::ostringstream() << "invalid type found '" << (int) json.type).str();
+        case JsonItemType::END_OF_JSON_VALUES:
+            return "<EMPTY>";
+        case JsonItemType::ERROR:
+            return json.text;
+        default:
+            return static_cast<const std::ostringstream &>(
+                    std::ostringstream() << "invalid type found '" << (int) json.type).str();
     }
 }
 
@@ -540,3 +545,5 @@ int main() {
     }
 }
 #endif
+
+#endif /* OAUTH2_JSON_PARSER_H */

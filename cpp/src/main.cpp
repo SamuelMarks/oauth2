@@ -4,12 +4,12 @@
  * to get information about the login
  */
 
-#include "url.cpp"
-#include "tiny_web_client.cpp"
-#include "random_string.cpp"
-#include "json_parser.cpp"
-#include "open_browser.cpp"
-#include "tiny_web_server.cpp"
+#include "url.h"
+#include "tiny_web_client.h"
+#include "random_string.h"
+#include "json_parser.h"
+#include "open_browser.h"
+#include "tiny_web_server.h"
 
 Request make_request(const URL &u, const std::string &verb="GET") {
     Request req;
@@ -31,7 +31,7 @@ Request make_request(const URL &u, const std::string &verb="GET") {
     return req;
 }
 
-int main(int argc, char* argv[])
+int main()
 {
     std::cout << "==============================================\n"
               << "(Public API call) GetApplicationEndpoint\n"
@@ -74,14 +74,15 @@ int main(int argc, char* argv[])
     std::cout << "==============================================\n"
               << "Send user to browser\n"
               << "==============================================" << std::endl;
-    const char* redirect_uri = "http://localhost:3000/ibm/cloud/appid/callback";
+    const std::string redirect_uri = static_cast<const std::ostringstream&>(
+            std::ostringstream() << "http://" << SERVER_HOST << ':'
+                                 << PORT_TO_BIND << EXPECTED_PATH).str();
     URL authorization_url = URL(authorization_endpoint);
     authorization_url.add_param("response_type", "code");
     authorization_url.add_param("client_id", metadata.object.find("clientId")->second.text);
     authorization_url.add_param("redirect_uri", redirect_uri);
     authorization_url.add_param("state", temporary_secret_state);
     authorization_url.add_param("scope", "openid");
-
     open_browser(authorization_url);
 
     // we then need to start our web server and block

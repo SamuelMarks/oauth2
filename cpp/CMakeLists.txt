@@ -3,7 +3,7 @@ cmake_policy(SET CMP0048 NEW)
 project(oauth2_cpp VERSION 0.0.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(src "src/main.cpp")
+set(src "src/main.cpp" src/url.h)
 
 include(CheckIncludeFile)
 include(CheckIncludeFiles)
@@ -111,6 +111,26 @@ elseif (WIN32)
     set(STACK_SIZE 16384)
 else ()
     set(STACK_SIZE 65535)
+endif ()
+
+if (NOT DEFINED SERVER_ADDR)
+    set(SERVER_ADDR "127.0.0.1")
+endif ()
+
+if (NOT DEFINED SERVER_HOST)
+    set(SERVER_HOST "localhost")
+endif ()
+
+if (NOT DEFINED PORT_TO_BIND)
+    set(PORT_TO_BIND "3000")
+endif ()
+
+if (NOT DEFINED MSG_BACKLOG)
+    set(MSG_BACKLOG 5)
+endif ()
+
+if (NOT DEFINED EXPECTED_PATH)
+    set(EXPECTED_PATH "/ibm/cloud/appid/callback")
 endif ()
 
 configure_file("src/config.h.in" "${PROJECT_BINARY_DIR}/src/config.h" @ONLY)

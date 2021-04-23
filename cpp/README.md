@@ -10,6 +10,18 @@ cmake -DCRYPTO_LIB='OpenSSL' ..
 cmake --build .
 ```
 
+### Configuration
+
+Additional flags you can provide are found in the [`CMakeLists.txt`](CMakeLists.txt). For example:
+```
+-DSTACK_SIZE=16384
+-DSERVER_ADDR='127.0.0.1'
+-DSERVER_HOST='localhost'
+-DPORT_TO_BIND=3000
+-DMSG_BACKLOG=5
+-DEXPECTED_PATH='/ibm/cloud/appid/callback'
+```
+
 ## Dependencies
 
   - [CMake](https://cmake.org)

@@ -1,3 +1,6 @@
+#ifndef OAUTH2_OPEN_BROWSER_H
+#define OAUTH2_OPEN_BROWSER_H
+
 // Reference https://github.com/microsoft/cpprestsdk/blob/7fbb08c491f9c8888cc0f3d86962acb3af672772/Release/samples/Oauth1Client/Oauth1Client.cpp
 #include <iostream>
 #include <cstdlib>
@@ -13,7 +16,7 @@
 #endif
 
 #ifdef TEST_OPEN_BROWSER
-#include "url.cpp"
+#include "url.h"
 #else
 // here to make this not have red squiggles
 // we forward declare the URL class and its
@@ -73,3 +76,5 @@ int main() {
     open_browser(url);
 }
 #endif
+
+#endif /* OAUTH2_OPEN_BROWSER_H */
