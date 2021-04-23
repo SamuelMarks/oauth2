@@ -509,10 +509,10 @@ int main()
     req.uri.protocol = "HTTP";
     req.uri.protocol_version = "1.0";
     // https://31f5ff35.eu-gb.apigw.appdomain.cloud/authtest/GetApplicationEndpoint
-    req.uri.host = "31f5ff35.eu-gb.apigw.appdomain.cloud";
+    req.uri.host = STR(API_HOST);
     req.uri.port = 443;
-    req.uri.path = "/authtest/GetApplicationEndpoint";
-    req.headers.push_back("HOST: 31f5ff35.eu-gb.apigw.appdomain.cloud");
+    req.uri.path = STR(API_APPLICATION_ENDPOINT_PATH);
+    req.headers.push_back("HOST: " + STR(API_HOST));
     Response resp = Response{};
 
     if (http_send(req, resp))

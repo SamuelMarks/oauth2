@@ -2,6 +2,45 @@
 #define OAUTH2_CHAR_UTILS_H
 #include <string>
 
+static inline bool is_whitespace(char);
+
+static inline bool is_sign(char);
+
+static inline bool is_exponent(char);
+
+static inline bool is_decimal_point(char);
+
+static inline bool is_quote(char);
+
+static inline bool is_comma(char);
+
+static inline bool is_colon(char);
+
+static inline bool is_keyword(const std::string&);
+
+static inline bool is_alpha(char);
+
+static inline bool is_key(char);
+
+static inline bool is_digit(char);
+
+static inline bool is_domain_character(char);
+
+static inline bool is_sub_delims(char);
+
+static inline bool is_hex_digit(char);
+
+static inline bool is_pct_encoded(char);
+
+static inline bool is_unreserved(char);
+
+static inline bool is_pchar(char);
+
+// See the RFC 3986.
+static inline bool is_fragment(char);
+
+static inline bool is_valid_path_char(char);
+
 static inline bool is_whitespace(const char ch) {
     return ch == 0x00|| ch == 0x20 || ch == 0x0A || ch == 0x0D || ch == 0x09;
 }

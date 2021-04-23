@@ -1,5 +1,8 @@
 C++ Version of OAuth2 authentication
 ====================================
+![C++](https://img.shields.io/badge/C%2B%2B-17%20|%2020-blue.svg)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![CMake](https://img.shields.io/badge/builder-CMake-blue.svg)]((https://cmake.org))
 
 ## Build
 
@@ -41,7 +44,7 @@ Additional flags you can provide are found in the [`CMakeLists.txt`](CMakeLists.
 
   - Linux
   - macOS
-  - Windows (WiP)
+  - Windows
 
 ## Libraries
 

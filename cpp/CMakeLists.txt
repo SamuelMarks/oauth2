@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.4)
 cmake_policy(SET CMP0048 NEW)
 project(oauth2_cpp VERSION 0.0.0 LANGUAGES C CXX)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(src "src/main.cpp" src/url.h)
+set(src "src/main.cpp" src/url.h src/char_utils.h src/random_string.cpp)
 
 include(CheckIncludeFile)
 include(CheckIncludeFiles)
@@ -131,6 +131,22 @@ endif ()
 
 if (NOT DEFINED EXPECTED_PATH)
     set(EXPECTED_PATH "/ibm/cloud/appid/callback")
+endif ()
+
+if (NOT DEFINED API_HOST)
+    set(API_HOST "31f5ff35.eu-gb.apigw.appdomain.cloud")
+endif ()
+
+if (NOT DEFINED API_APPLICATION_ENDPOINT_PATH)
+    set(API_APPLICATION_ENDPOINT_PATH "/authtest/GetApplicationEndpoint")
+endif ()
+
+if (NOT DEFINED API_APPLICATION_ENDPOINT_PATH)
+    set(API_APPLICATION_ENDPOINT_PATH "/authtest/GetApplicationEndpoint")
+endif ()
+
+if (NOT DEFINED API_GET_ACCESS_TOKEN_PATH)
+    set(API_GET_ACCESS_TOKEN_PATH "/authtest/GetAccessToken")
 endif ()
 
 configure_file("src/config.h.in" "${PROJECT_BINARY_DIR}/src/config.h" @ONLY)

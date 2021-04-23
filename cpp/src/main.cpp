@@ -47,7 +47,7 @@ int main()
     std::cout << "Body: " << response.body << '\n';
 
 
-    std::string temporary_secret_state = generate_random_string(5);
+    const std::string temporary_secret_state = generate_random_string(5);
     std::cout << "Generated secret state: " << temporary_secret_state << std::endl;
 
     const JsonItem metadata = json_create_from_string(response.body);
@@ -122,7 +122,9 @@ int main()
     std::cout << "==============================================\n"
               << "(Public API+secret) GetAccessToken\n"
               << "==============================================" << std::endl;
-    const URL token_url = URL("https://31f5ff35.eu-gb.apigw.appdomain.cloud/authtest/GetAccessToken");
+    const URL token_url = URL(
+            static_cast<const std::ostringstream&>(
+                    std::ostringstream() << "https://" << API_HOST << API_GET_ACCESS_TOKEN_PATH).str());
     std::map<std::string, std::string> post_fields;
     post_fields.insert(std::make_pair("grant_type", "authorization_code"));
     post_fields.insert(std::make_pair("code", oauth_response.code));
