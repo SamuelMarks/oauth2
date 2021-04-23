@@ -11,7 +11,7 @@
 #include <cstring>      /* memcpy, memset */
 #include "config.h"
 
-#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 #include <io.h>
@@ -251,7 +251,7 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
         }
         std::ostringstream ss;
         size_t counter = 0;
-        for( auto const & [key, value] : post_fields) {
+        for( auto const & [key, value] : post_fields ) {
             // TODO encode value for special characters
             ss << key << "=" << value ;
             if ( counter < post_fields.size()-1 ) {
@@ -262,10 +262,9 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
         content = ss.str();
         request.headers.emplace_back("Content-Type: application/x-www-form-urlencoded");
         std::cout << "POST Data: " << content << '\n';
-        std::ostringstream header_in;
-        header_in << "Content-Length: " << content.size();
-        request.headers.push_back(header_in.str());
-        
+
+        request.headers.push_back(static_cast<const std::ostringstream&>(
+                std::ostringstream() << "Content-Length: " << content.size()).str());
     }
     std::string message = create_message(request);
     if ( !content.empty() ) {
@@ -273,6 +272,15 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
     }
     std::cout << "Target: " << create_host(request) << '\n'
               << "Sending: " << message;
+
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+    WSADATA wsaData;
+    int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
+    if (iResult != 0) {
+        std::cerr << "WSAStartup returned: " << iResult << std::endl;
+        return iResult;
+    }
+#endif
 
     struct hostent *server;
     struct sockaddr_in serv_addr;
@@ -284,6 +292,9 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
     {
         response.error.message = "ERROR opening socket";
         response.error.code = 1001;
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+        std::cerr << "WSAGetLastError: " << WSAGetLastError() << std::endl;
+#endif
         return response.error.code;
     }
 
@@ -444,10 +455,11 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
 
     /* close the socket */
     close(socket_file_descriptor);
-
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+    WSACleanup();
+#endif
     response.raw = incoming_data.str();
-    size_t pos = 0;
-    for (size_t ii = 0; ii < response.raw.size(); ii++)
+    for (size_t ii = 0, pos=0; ii < response.raw.size(); ii++)
     {
         if (response.raw[ii] == '\r' && response.raw[ii + 1] == '\n' &&
             response.raw[ii + 2] == '\r' && response.raw[ii + 3] == '\n')
@@ -457,7 +469,7 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
         }
         if (response.raw[ii] == '\r' && response.raw[ii + 1] == '\n')
         {
-            std::basic_string header = response.raw.substr(pos, ii - pos);
+            const std::basic_string header = response.raw.substr(pos, ii - pos);
             std::cout << "HEADER: " << header << std::endl;
             response.headers.push_back(header);
             if (response.headers.size() == 1)
@@ -472,8 +484,8 @@ int http_send(Request&request, Response &response, std::map<std::string, std::st
                            [](unsigned char c) { return std::tolower(c); });
             if (lc_header.find("content-type: ") == 0)
             {
-                size_t start = lc_header.find(' ') + 1,
-                       end = lc_header.find(';');
+                const size_t start = lc_header.find(' ') + 1;
+                size_t end = lc_header.find(';');
                 if (end == std::string::npos)
                 {
                     end = lc_header.size();
@@ -515,6 +527,6 @@ int main()
 }
 #endif
 
-#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
 #undef _WINSOCK_DEPRECATED_NO_WARNINGS
 #endif

@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <sys/types.h>
 
-#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
 #include <intrin.h>
 
 #ifndef _WIN64

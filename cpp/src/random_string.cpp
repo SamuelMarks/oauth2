@@ -3,7 +3,7 @@
 #include <iostream>
 #include <ctime>
 
-#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
 #include <process.h>
 #define getpid _getpid
 #else

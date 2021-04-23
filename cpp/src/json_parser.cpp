@@ -195,9 +195,7 @@ void json_parse_object_value(JsonParseContext& context, JsonItem& objectItem ) {
             return;
         }
         if ( new_key.type == JsonItemType::INTEGER ) {
-            std::ostringstream ss;
-            ss << new_key.integer;
-            new_key.text = ss.str();
+            new_key.text = std::to_string(new_key.integer);
         }
         json_eat_whitespace(context);
         if ( is_colon(context.buffer[context.pos]) ) {
@@ -344,15 +342,15 @@ JsonItem json_create_from_string(std::string const & buffer) {
     JsonItem item = json_create_from_string_buffer(context);
     if ( context.error ) {
         item.type = JsonItemType::ERROR;
-        std::ostringstream oss;
-        oss << "Error at " << context.error_pos_start << "," << context.error_pos_end << ": " << context.error_message;
-        item.text = oss.str();
+        item.text = static_cast<const std::ostringstream&>(
+                std::ostringstream() << "Error at " << context.error_pos_start << ","
+                                     << context.error_pos_end << ": " << context.error_message).str();
     }
     return item;
 }
 
 INTERNAL
-std::string json_json_pretty_print_item(JsonItem const & json, size_t indent) {
+std::string json_json_pretty_print_item(JsonItem const & json, const size_t indent) {
     switch( json.type ) {
     case JsonItemType::EMPTY:
         return {};
@@ -363,20 +361,12 @@ std::string json_json_pretty_print_item(JsonItem const & json, size_t indent) {
     case JsonItemType::FALSE_VALUE:
         return "false";
     case JsonItemType::TEXT:{
-        std::ostringstream in;
-        in << '"' << json.text << '"';
-        return in.str();
+        return static_cast<const std::ostringstream&>(
+                std::ostringstream() << '"' << json.text << '"').str();
     }
-    case JsonItemType::INTEGER:{
-        std::ostringstream in;
-        in << json.integer;
-        return in.str();
-    }
-    case JsonItemType::FLOAT:{
-        std::ostringstream in;
-        in << json.real;
-        return in.str();
-    }
+    case JsonItemType::INTEGER:
+    case JsonItemType::FLOAT:
+        return std::to_string(json.integer);
     case JsonItemType::ARRAY:{
         std::ostringstream in;
         in << "[";
@@ -384,7 +374,7 @@ std::string json_json_pretty_print_item(JsonItem const & json, size_t indent) {
             in << "]";
             return in.str();
         }
-        std::string indentation = std::string( (indent+1) * 2, ' ');
+        const std::string indentation = std::string( (indent+1) * 2, ' ');
         in << '\n';
         size_t counter = 0;
         for_each(begin(json.array), end(json.array), [&](JsonItem const & item) {
@@ -396,18 +386,18 @@ std::string json_json_pretty_print_item(JsonItem const & json, size_t indent) {
             }
             counter++;
         });
-        std::string last_indentation = std::string( indent * 2, ' ');
+        const std::string last_indentation = std::string( indent * 2, ' ');
         in << last_indentation << "]";
         return in.str();
     }
     case JsonItemType::OBJECT:{
         std::ostringstream in;
         in << "{";
-        if ( json.object.size() == 0 ) {
+        if ( json.object.empty() ) {
             in << "}";
             return in.str();
         }
-        std::string indentation = std::string( (indent+1) * 2, ' ');
+        const std::string indentation = std::string( (indent+1) * 2, ' ');
         in << '\n' << indentation;
         size_t counter = 0;
         for( auto const & [key,val] : json.object ) {
@@ -419,34 +409,23 @@ std::string json_json_pretty_print_item(JsonItem const & json, size_t indent) {
             }
             counter++;
         };
-        std::string last_indentation = std::string( indent * 2, ' ');
+        const std::string last_indentation = std::string( indent * 2, ' ');
         in << last_indentation << "}";
         return in.str();
     }
-    case JsonItemType::END_OF_JSON_VALUES:{
-        std::ostringstream in;
-        in << "<EMPTY>";
-        return in.str();
-    }
-    case JsonItemType::ERROR: {
-        std::ostringstream in;
-        in << json.text;
-        return in.str();
-    }
-    default:{
-        std::ostringstream in;
-        in << "invalid type found '" << (int) json.type ;
-        return in.str();
-    }
+    case JsonItemType::END_OF_JSON_VALUES:
+        return "<EMPTY>";
+    case JsonItemType::ERROR:
+        return json.text;
+    default:
+        return static_cast<const std::ostringstream&>(
+                std::ostringstream() << "invalid type found '" << (int) json.type).str();
     }
 }
 
 INTERNAL
 void json_pretty_print(JsonItem const & json ) {
-    std::ostringstream in;
-    in << json_json_pretty_print_item(json, 0);
-    in << '\n';
-    std::cout << in.str();
+    std::cout << json_json_pretty_print_item(json, 0) << '\n';
 }
 
 #ifdef TEST_JSON

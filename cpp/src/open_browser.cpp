@@ -37,19 +37,18 @@ void open_browser(URL& url)
     //
     // In OAuth2 we open the browser for the user to
     // enter their credentials.
-    std::ostringstream browser_cmd;
-    browser_cmd << "xdg-open \""
-                << url
-                << '"';
-    std::string browser_cmd_string = browser_cmd.str();
+    std::string browser_cmd_string = static_cast<const std::ostringstream&>(
+                                         std::ostringstream()
+                                         << "xdg-open \""
+                                         << url
+                                         << '"'
+                                         ).str();
     std::cout << browser_cmd_string << std::endl;
     (void)system(browser_cmd_string.c_str());
 
 #else
-
-    std::ostringstream _url;
-    _url << url;
-    std::string url_str = _url.str();
+    const std::string url_str = static_cast<const std::ostringstream&>(
+            std::ostringstream() << url).str();
 
 #if defined(macintosh) || defined(Macintosh) || defined(__APPLE__) && defined(__MACH__)
     CFURLRef cf_url = CFURLCreateWithBytes (

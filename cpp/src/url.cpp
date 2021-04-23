@@ -157,9 +157,8 @@ private:
         std::string this_domain = url.substr(pos, end_of_domain - pos);
         if (this_domain.empty())
         {
-            std::ostringstream ss;
-            ss << "no domain found in '" << url << "'";
-            throw std::runtime_error(ss.str());
+            throw std::runtime_error(static_cast<const std::ostringstream&>(
+                                             std::ostringstream() << "no domain found in '" << url << "'").str());
         }
         else
         {
@@ -181,22 +180,26 @@ private:
                 {
                     if (this_domain[ii] == '.' && this_domain[ii + 1] == '.')
                     {
-                        std::ostringstream ss;
-                        ss << "invalid character '" << this_domain[ii + 1] << "' found next to '.' in domain of '" << url << "'";
-                        throw std::runtime_error(ss.str());
+                        throw std::runtime_error(static_cast<const std::ostringstream&>(
+                                                         std::ostringstream() <<"invalid character '"
+                                                                              << this_domain[ii + 1]
+                                                                              << "' found next to '.' in domain of '"
+                                                                              << url << "'").str());
                     }
                 }
                 if (this_domain[ii] == '.' && (this_domain[ii] == 0 || ii == this_domain.size() - 1))
                 {
-                    std::ostringstream ss;
-                    ss << "'.'' cannot appear at start or end of domain in url '" << url << "'";
-                    throw std::runtime_error(ss.str());
+                    throw std::runtime_error(static_cast<const std::ostringstream&>(
+                                                     std::ostringstream()
+                                                     << "'.'' cannot appear at start or end of domain in url '"
+                                                     << url << "'").str());
                 }
                 if (!is_domain_character(this_domain[ii]))
                 {
-                    std::ostringstream ss;
-                    ss << "invalid character '" << this_domain[ii] << "' found in domain of '" << url << "'";
-                    throw std::runtime_error(ss.str());
+                    throw std::runtime_error(static_cast<const std::ostringstream&>(
+                                                     std::ostringstream()
+                                                     << "invalid character '" << this_domain[ii]
+                                                     << "' found in domain of '" << url << "'").str());
                 }
             }
         }
@@ -204,7 +207,7 @@ private:
         return pos + domain.size();
     }
 
-    size_t set_path_(std::string const &url, size_t pos)
+    size_t set_path_(std::string const &url, const size_t pos)
     {
         if (pos >= url.size())
         {
@@ -227,17 +230,16 @@ private:
         }
         if (path.empty())
         {
-            std::ostringstream ss;
-            ss << "empty path in '" << url << "'";
-            throw std::runtime_error(ss.str());
+            throw std::runtime_error(static_cast<const std::ostringstream&>(
+                                             std::ostringstream() << "empty path in '" << url << "'").str());
         }
         for (char ii : path)
         {
             if (!is_valid_path_char(ii))
             {
-                std::ostringstream ss;
-                ss << "invalid character '" << ii << "' found in path of '" << url << "'";
-                throw std::runtime_error(ss.str());
+                throw std::runtime_error(static_cast<const std::ostringstream&>(
+                                                 std::ostringstream() << "invalid character '" << ii
+                                                                      << "' found in path of '" << url << "'").str());
             }
         }
         return MIN(MIN(querystring_pos, fragment_pos), url.size());
@@ -315,8 +317,7 @@ private:
             querystring_pos_end = url.size();
         }
         std::ostringstream ss;
-        size_t ii = querystring_pos_start + 1;
-        for (; ii < querystring_pos_end; ii++)
+        for (size_t ii = querystring_pos_start + 1; ii < querystring_pos_end; ii++)
         {
             if (url[ii] == '#')
             {
@@ -353,10 +354,10 @@ private:
         }
         std::string encoded_query_string = ss.str();
         querystring = encoded_query_string;
-        return encoded_query_string;
+        return std::move(encoded_query_string);
     }
 
-    size_t set_fragment_(std::string const &url, size_t pos)
+    size_t set_fragment_(std::string const &url, const size_t pos)
     {
         size_t fragment_pos_start = url.find_first_of('#'),
                fragment_pos_end = url.find_first_of('?', fragment_pos_start);
@@ -372,9 +373,10 @@ private:
         {
             if (!is_fragment(url[ii]))
             {
-                std::ostringstream ss;
-                ss << "invalid character '" << url[ii] << "' found in fragment of '" << url << "'";
-                throw std::runtime_error(ss.str());
+                throw std::runtime_error(static_cast<const std::ostringstream&>(
+                                                 std::ostringstream() << "invalid character '" << url[ii]
+                                                                      << "' found in fragment of '" << url
+                                                                      << "'").str());
             }
         }
         fragment = url.substr(fragment_pos_start, fragment_pos_end - fragment_pos_start);
@@ -394,14 +396,13 @@ private:
         }
         if (encoded_data_.size() < 5)
         {
-            std::ostringstream ss;
-            ss << "invalid url found, string '" << url << "' is too short";
-            throw std::runtime_error(ss.str());
+            throw std::runtime_error(static_cast<const std::ostringstream&>(
+                                             std::ostringstream() << "invalid url found, string '"
+                                                                  << url << "' is too short").str());
         }
-        size_t pos = 0;
+        size_t pos;
         set_protocol_(url);
-        pos = check_protocol_domain_separator_(url);
-        pos = set_domain_(url, pos);
+        pos = set_domain_(url, check_protocol_domain_separator_(url));
         if (pos == url.size())
         {
             return;
