@@ -141,10 +141,6 @@ if (NOT DEFINED API_APPLICATION_ENDPOINT_PATH)
     set(API_APPLICATION_ENDPOINT_PATH "/authtest/GetApplicationEndpoint")
 endif ()
 
-if (NOT DEFINED API_APPLICATION_ENDPOINT_PATH)
-    set(API_APPLICATION_ENDPOINT_PATH "/authtest/GetApplicationEndpoint")
-endif ()
-
 if (NOT DEFINED API_GET_ACCESS_TOKEN_PATH)
     set(API_GET_ACCESS_TOKEN_PATH "/authtest/GetAccessToken")
 endif ()

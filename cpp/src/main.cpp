@@ -36,16 +36,17 @@ int main()
     std::cout << "==============================================\n"
               << "(Public API call) GetApplicationEndpoint\n"
               << "==============================================" << std::endl;
-    const URL target("https://31f5ff35.eu-gb.apigw.appdomain.cloud/authtest/GetApplicationEndpoint");
+    const URL target(static_cast<const std::ostringstream&>(
+            std::ostringstream() << "https://" << API_HOST
+                                 << API_APPLICATION_ENDPOINT_PATH).str());
     Request request = make_request(target);
     Response response;
     const auto resp = http_send(request, response);
     if (  resp != 0 ) {
-        fprintf(stderr, "resp: %d\n", resp);
+        std::cerr << "resp: " << resp << std::endl;
         throw std::runtime_error("request failed");
     }
     std::cout << "Body: " << response.body << '\n';
-
 
     const std::string temporary_secret_state = generate_random_string(5);
     std::cout << "Generated secret state: " << temporary_secret_state << std::endl;
