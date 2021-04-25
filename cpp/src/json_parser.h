@@ -428,12 +428,12 @@ std::string json_json_pretty_print_item(JsonItem const & json, const size_t inde
     }
 }
 
+#ifdef TEST_JSON
 INTERNAL
 void json_pretty_print(JsonItem const & json ) {
     std::cout << json_json_pretty_print_item(json, 0) << '\n';
 }
 
-#ifdef TEST_JSON
 int main() {
 #if 1
     {

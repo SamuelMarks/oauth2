@@ -1,9 +1,10 @@
 #ifndef OAUTH2_CPP_URL_H
 #define OAUTH2_CPP_URL_H
 
-#include <iostream>
 #include <cstdlib>
 #include <sstream>
+#include <iostream>
+#include <string>
 #include <map>
 
 #include "char_utils.h"
@@ -423,7 +424,12 @@ private:
     }
 };
 
-std::ostream &operator<<(std::ostream &out, URL &url)
+inline std::string to_string(const URL& url) {
+    return url.encoded();
+}
+
+/*
+static std::ostream &operator<<(std::ostream &out, URL &url)
 {
 #ifdef TEST_URL
     return url.print(out);
@@ -432,8 +438,10 @@ std::ostream &operator<<(std::ostream &out, URL &url)
     return out;
 #endif
 }
+*/
 
-std::ostream &operator<<(std::ostream &out, URL const &url)
+/*
+static std::ostream &operator<<(std::ostream &out, URL const &url)
 {
 #ifdef TEST_URL
     return url.print(out);
@@ -442,8 +450,10 @@ std::ostream &operator<<(std::ostream &out, URL const &url)
     return out;
 #endif
 }
+*/
 
-std::ostream &operator<<(std::ostream &out, URL *url)
+/*
+static std::ostream &operator<<(std::ostream &out, URL *url)
 {
 #ifdef TEST_URL
     return url->print(out);
@@ -452,8 +462,10 @@ std::ostream &operator<<(std::ostream &out, URL *url)
     return out;
 #endif
 }
+*/
 
-std::ostream &operator<<(std::ostream &out, URL const *url)
+/*
+static std::ostream &operator<<(std::ostream &out, URL const *url)
 {
 #ifdef TEST_URL
     return url->print(out);
@@ -462,6 +474,7 @@ std::ostream &operator<<(std::ostream &out, URL const *url)
     return out;
 #endif
 }
+*/
 
 #ifdef TEST_URL
 #define ASSERT_EXCEPTION(x)                                                  \
