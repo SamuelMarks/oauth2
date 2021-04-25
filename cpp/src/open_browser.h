@@ -17,12 +17,6 @@
 
 #ifdef TEST_OPEN_BROWSER
 #include "url.h"
-#else
-// here to make this not have red squiggles
-// we forward declare the URL class and its
-// operator<< function.
-class URL;
-std::ostream& operator<<(std::ostream& out, URL& url);
 #endif
 
 // We could have used a plain string instead of
@@ -30,7 +24,7 @@ std::ostream& operator<<(std::ostream& out, URL& url);
 // from a library, but here we create our own
 // for explanations sake.
 static
-void open_browser(URL& url)
+void open_browser(const URL& url)
 {
 #ifdef __linux__
     // On linux xdg-open is a command that opens the
@@ -50,8 +44,7 @@ void open_browser(URL& url)
     (void)system(browser_cmd_string.c_str());
 
 #else
-    const std::string url_str = static_cast<const std::ostringstream&>(
-            std::ostringstream() << url).str();
+    const std::string url_str = to_string(url);
 
 #if defined(macintosh) || defined(Macintosh) || defined(__APPLE__) && defined(__MACH__)
     CFURLRef cf_url = CFURLCreateWithBytes (

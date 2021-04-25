@@ -11,25 +11,6 @@
 #include "open_browser.h"
 #include "tiny_web_server.h"
 
-Request make_request(const URL &u, const std::string &verb="GET") {
-    Request req;
-    req.verb = verb;
-    req.uri.protocol = "HTTP";
-    req.uri.protocol_version = "1.0";
-    if ( u.protocol ==  "https") {
-        req.uri.use_ssl = true;
-        req.uri.port = 443;
-    } else {
-        req.uri.use_ssl = false;
-        req.uri.port = 80;
-    }
-    req.uri.host = u.domain;
-    req.uri.path = u.path;
-    req.uri.querystring = u.encoded_querystring();
-    req.uri.fragment = u.fragment;
-    req.headers.push_back("HOST: "+req.uri.host);
-    return req;
-}
 
 int main()
 {
@@ -52,7 +33,9 @@ int main()
     std::cout << "Generated secret state: " << temporary_secret_state << std::endl;
 
     const JsonItem metadata = json_create_from_string(response.body);
+#ifdef TEST_JSON
     json_pretty_print(metadata);
+#endif
 
     const auto openid_json = metadata.object.find("openid");
     std::cout << "OpenID: " << openid_json->second.text << "\n"
@@ -67,7 +50,9 @@ int main()
     }
 
     const JsonItem openid_metadata = json_create_from_string(openid_response.body);
+#ifdef TEST_JSON
     json_pretty_print(openid_metadata);
+#endif
 
     const auto authorization_endpoint_json = openid_metadata.object.find("authorization_endpoint");
     const std::string authorization_endpoint = authorization_endpoint_json->second.text;
@@ -126,11 +111,12 @@ int main()
     const URL token_url = URL(
             static_cast<const std::ostringstream&>(
                     std::ostringstream() << "https://" << API_HOST << API_GET_ACCESS_TOKEN_PATH).str());
-    std::map<std::string, std::string> post_fields;
-    post_fields.insert(std::make_pair("grant_type", "authorization_code"));
-    post_fields.insert(std::make_pair("code", oauth_response.code));
-    post_fields.insert(std::make_pair("redirect_uri", redirect_uri));
-    post_fields.insert(std::make_pair("client_id", metadata.object.find("clientId")->second.text));
+    const std::map<std::string, std::string> post_fields {
+            std::make_pair("grant_type", "authorization_code"),
+            std::make_pair("code", oauth_response.code),
+            std::make_pair("redirect_uri", redirect_uri),
+            std::make_pair("client_id", metadata.object.find("clientId")->second.text)
+    };
     Request token_request = make_request(token_url, "POST");
     Response token_response;
     if ( http_send(token_request, token_response, post_fields) != 0 ) {

@@ -3,7 +3,7 @@ cmake_policy(SET CMP0048 NEW)
 project(oauth2_cpp VERSION 0.0.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(src "src/main.cpp" src/url.h src/char_utils.h src/random_string.cpp)
+set(src src/main.cpp src/url.h src/char_utils.h src/random_string.cpp src/tiny_web_client.cpp src/tiny_web_server.cpp)
 
 include(CheckIncludeFile)
 include(CheckIncludeFiles)
@@ -143,6 +143,18 @@ endif ()
 
 if (NOT DEFINED API_GET_ACCESS_TOKEN_PATH)
     set(API_GET_ACCESS_TOKEN_PATH "/authtest/GetAccessToken")
+endif ()
+
+# https://github.com/GoogleCloudPlatform/gsutil/blob/7d103/gslib/utils/system_util.py#L174-L193
+if (NOT DEFINED CLIENT_ID)
+    set(CLIENT_ID "32555940559.apps.googleusercontent.com")
+    # set(CLIENT_ID "909320924072.apps.googleusercontent.com")
+endif ()
+
+# https://github.com/GoogleCloudPlatform/gsutil/blob/7d103/gslib/utils/system_util.py#L174-L193
+if (NOT DEFINED CLIENT_SECRET)
+    set(CLIENT_SECRET "ZmssLNjJy2998hD4CTg2ejr2")
+    # set(CLIENT_SECRET "p3RlpR10xMFh9ZXBS/ZNLYUu")
 endif ()
 
 configure_file("src/config.h.in" "${PROJECT_BINARY_DIR}/src/config.h" @ONLY)
