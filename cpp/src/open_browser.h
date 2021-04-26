@@ -9,10 +9,16 @@
 #ifdef __linux__
 #include <cstring>
 #elif defined(macintosh) || defined(Macintosh) || defined(__APPLE__) && defined(__MACH__)
+
 #include <CoreFoundation/CFBundle.h>
 #include <ApplicationServices/ApplicationServices.h>
-#elif defined(_MSC_VER) && !defined(__INTEL_COMPILER)
-#include <shellapi.h>
+
+#elif defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+
+#include <ShlObj.h>
+#include <winbase.h>
+#include <Shellapi.h>
+
 #endif
 
 #ifdef TEST_OPEN_BROWSER
@@ -56,7 +62,7 @@ void open_browser(const URL& url)
     );
     LSOpenCFURLRef(cf_url,0);
     CFRelease(cf_url);
-#elif defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#elif defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
     ShellExecuteA(NULL, "open", url_str.c_str(), NULL, NULL, SW_SHOWNORMAL);
 #endif
 

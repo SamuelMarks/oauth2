@@ -166,7 +166,7 @@ void json_increment_context(JsonParseContext& context) {
 
 INTERNAL inline
 void json_eat_whitespace(JsonParseContext& context) {
-    while ( is_whitespace(context.buffer[context.pos]) ) {
+    while ( context.pos < context.buffer.size() && is_whitespace(context.buffer[context.pos]) ) {
         json_increment_context(context);
     }
 }

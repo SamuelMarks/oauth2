@@ -11,6 +11,14 @@
 #include "open_browser.h"
 #include "tiny_web_server.h"
 
+typedef struct {
+    std::string projectNumber;
+    std::string projectId;
+    std::string lifecycleState;
+    std::string name;
+    std::string createTime; /* could make this a `std::tm`s */
+} GoogleCloudProject;
+
 int main()
 {
     const std::string redirect_uri = static_cast<const std::ostringstream&>(
@@ -51,12 +59,44 @@ int main()
     if ( http_send(token_request, token_response, post_fields) != 0 )
         throw std::runtime_error("request failed to get token");
 
-    if ( token_response.status < 300 ) {
-        const JsonItem access_json = json_create_from_string(token_response.body);
-        const std::string access_token = access_json.object.find("access_token")->second.text;
-        std::cout << "Access Token: " << access_token << '\n';
-    } else {
+    if (token_response.status >= 300) {
         std::cerr << token_response.raw << std::endl;
         return EXIT_FAILURE;
     }
+
+    const JsonItem access_json = json_create_from_string(token_response.body);
+    const std::string access_token = access_json.object.find("access_token")->second.text;
+    std::cout << "Access Token: " << access_token << '\n';
+
+    Request private_request = make_request(
+            URL("https://cloudresourcemanager.googleapis.com/v1beta1/projects"));
+    private_request.headers.emplace_back("Content-type: application/json");
+    private_request.headers.push_back("Authorization: Bearer " + access_token);
+    Response private_response;
+    if (http_send(private_request, private_response)) {
+        throw std::runtime_error("request failed to get projects");
+    }
+    std::cout << private_response.raw << '\n';
+    const JsonItem projects = json_create_from_string(private_response.body).object.find("projects")->second;
+    if (projects.array.empty()) {
+        std::cerr << "A project must be created. For details on how and why, see: "
+                     "https://cloud.google.com/resource-manager/docs/creating-managing-projects"
+                  << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    GoogleCloudProject project;
+    /* maybe reverse this array / iterate in reverse? */
+    for(JsonItem const &item : projects.array)
+        if (item.object.find("lifecycleState")->second.text == "ACTIVE") {
+            project = GoogleCloudProject{
+                    /*.projectNumber=*/    item.object.find("projectNumber")->second.text,
+                    /*.projectId=*/    item.object.find("projectId")->second.text,
+                    /*.lifecycleState=*/    item.object.find("lifecycleState")->second.text,
+                    /*.name=*/    item.object.find("name")->second.text,
+                    /*.createTime=*/    item.object.find("createTime")->second.text,
+            };
+            break;
+        }
+    std::cout << "Found project: " << project.name << " (" << project.projectId << ')' << std::endl;
 }

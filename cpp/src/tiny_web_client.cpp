@@ -14,16 +14,10 @@
 
 #if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
-
 #include <io.h>
-// #include <winsock.h>
 #include <winsock2.h>
-#define close closesocket
-#define write _write
-#define read _read
 
 // SSL
-#include <Ws2tcpip.h>
 #else
 #include <unistd.h>     /* read, write, close */
 #include <sys/socket.h> /* socket, connect */
@@ -203,7 +197,11 @@ int http_send(Request&request, Response &response, const std::map<std::string, s
     }
 
     /* fill in the structure */
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+    ZeroMemory(&serv_addr, sizeof(serv_addr));
+#else
     memset(&serv_addr, 0, sizeof(serv_addr));
+#endif
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(request.uri.port);
     memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
@@ -221,7 +219,11 @@ int http_send(Request&request, Response &response, const std::map<std::string, s
         ssl_client.connect_to_socket(socket_file_descriptor);
         if (!ssl_client.is_valid())
         {
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+            closesocket(socket_file_descriptor);
+#else
             close(socket_file_descriptor);
+#endif
             response.error.message = "ERROR failed to open ssl connection";
             response.error.code = 1100;
             return response.error.code;
@@ -239,7 +241,11 @@ int http_send(Request&request, Response &response, const std::map<std::string, s
             response.error.code = 1004;
             if (bytes < 0)
             {
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+                closesocket(socket_file_descriptor);
+#else
                 close(socket_file_descriptor);
+#endif
                 int err = SSL_get_error(ssl_client.session(), bytes);
                 switch (err)
                 {
@@ -267,7 +273,11 @@ int http_send(Request&request, Response &response, const std::map<std::string, s
         }
         else
         {
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+            bytes = send(socket_file_descriptor, message.c_str() + sent, total - sent, 0);
+#else
             bytes = write(socket_file_descriptor, message.c_str() + sent, total - sent);
+#endif
             if (bytes < 0)
             {
                 response.error.message = "ERROR writing message to socket";
@@ -285,7 +295,11 @@ int http_send(Request&request, Response &response, const std::map<std::string, s
     char buffer[STACK_SIZE];
     // SECURITY make sure we wipe the buffer as in previous runs
     // we had some leakage into the next call.
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+    ZeroMemory(&buffer, sizeof(buffer));
+#else
     memset(&buffer, 0, sizeof(buffer));
+#endif
     total = sizeof(buffer) - 1;
     int received = 0;
     do
@@ -296,11 +310,19 @@ int http_send(Request&request, Response &response, const std::map<std::string, s
         }
         else
         {
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+            bytes = recv(socket_file_descriptor, buffer + received, total - received, 0);
+#else
             bytes = read(socket_file_descriptor, buffer + received, total - received);
+#endif
         }
         if (bytes < 0)
         {
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+            closesocket(socket_file_descriptor);
+#else
             close(socket_file_descriptor);
+#endif
             // check for ssl errors if we are using ssl
             if (ssl_client.is_valid())
             {
@@ -342,16 +364,22 @@ int http_send(Request&request, Response &response, const std::map<std::string, s
         {
             incoming_data << buffer;
             // reset to nulls
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+            ZeroMemory(&buffer, sizeof(buffer));
+#else
             memset(&buffer, 0, sizeof(buffer));
+#endif
             received = 0;
         }
     } while (true);
     incoming_data << buffer;
 
     /* close the socket */
-    close(socket_file_descriptor);
 #if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+    closesocket(socket_file_descriptor);
     WSACleanup();
+#else
+    close(socket_file_descriptor);
 #endif
     response.raw = incoming_data.str();
     for (size_t ii = 0, pos=0; ii < response.raw.size(); ii++)

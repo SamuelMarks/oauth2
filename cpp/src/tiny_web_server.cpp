@@ -1,31 +1,22 @@
-#include <map>
-#include "tiny_web_server.h"
 // Reference: https://rosettacode.org/wiki/Hello_world/Web_server#C
+#include <map>
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <cstdio>
 #include <cstdlib>
-#include <map>
-#include <sys/types.h>
 
 #include "config.h"
+#include "tiny_web_server.h"
 
 #if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
-#include <intrin.h>
-
-#ifndef _WIN64
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#endif
+#include <ws2tcpip.h>
 #include <winsock2.h>
-#define close closesocket
-#define write _write
-#define read _read
+#include <io.h>
 
 void err(int code, const char *message) {
-    fprintf(stderr, message);
-    exit(code);
+    std::cerr << message << std::endl;
+    exit(code == EXIT_SUCCESS? EXIT_FAILURE : code);
 }
 
 #else
@@ -63,9 +54,19 @@ split_querystring(std::string const & querystring )
     return result;
 }
 
-AuthenticationResponse wait_for_oauth2_redirect()
-{
+AuthenticationResponse wait_for_oauth2_redirect() {
     AuthenticationResponse authentication_response;
+
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+    // Initialize Winsock
+    int iResult;
+    WSADATA wsaData;
+    iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
+    if (iResult != 0) {
+        std::cerr << "WSAStartup failed: " << iResult << std::endl;
+    }
+#endif
+
     int socket_options = SO_DEBUG;
     int client_file_descriptor;
 
@@ -85,11 +86,18 @@ AuthenticationResponse wait_for_oauth2_redirect()
 
     if (bind(server_socket, (struct sockaddr *)&svr_addr, sizeof(svr_addr)) == -1)
     {
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+        closesocket(server_socket);
+#else
         close(server_socket);
+#endif
         err(1, "Can't bind");
     }
 
-    listen(server_socket, MSG_BACKLOG);
+    int listen_resp = listen(server_socket, MSG_BACKLOG);
+    if (listen_resp != 0) {
+        exit(EXIT_FAILURE);
+    }
     bool ok = false;
     while (!ok)
     {
@@ -104,10 +112,14 @@ AuthenticationResponse wait_for_oauth2_redirect()
 
         // keep on reading until we have digest everything
         std::ostringstream incoming_datastream;
-        char buffer[65535];
+        char buffer[STACK_SIZE];
         int bytes;
         do {
-            bytes = read(client_file_descriptor, buffer, 65535);
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+            bytes = recv(client_file_descriptor, buffer, STACK_SIZE, 0);
+#else
+            bytes = read(client_file_descriptor, buffer, STACK_SIZE);
+#endif
             if ( bytes > 0 ) {
                 incoming_datastream << buffer;
                 // if we do not fill up our buffer then we have 
@@ -120,7 +132,11 @@ AuthenticationResponse wait_for_oauth2_redirect()
 
         if ( bytes < 0 ) {
             printf("Error while reading incoming data stream.\n");
-            write(client_file_descriptor, responseErr, sizeof(responseErr) - 1); 
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+            send(client_file_descriptor, responseErr, sizeof(responseErr) - 1, 0);
+#else
+            write(client_file_descriptor, responseErr, sizeof(responseErr) - 1);
+#endif
             continue;
         }
         std::string incoming_message = incoming_datastream.str();
@@ -131,7 +147,12 @@ AuthenticationResponse wait_for_oauth2_redirect()
         if ( incoming_message[0] != 'G' ||
             incoming_message[1] != 'E' ||
             incoming_message[2] != 'T' ) {
+
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+            send(client_file_descriptor, responseOk, sizeof(responseOk) - 1, 0);
+#else
             write(client_file_descriptor, responseOk, sizeof(responseOk) - 1); /*-1:'\0'*/
+#endif
             continue;
         }  
 
@@ -158,13 +179,28 @@ AuthenticationResponse wait_for_oauth2_redirect()
         }
         
         if ( ok ) {
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+            send( client_file_descriptor, responseOk, sizeof(responseOk) - 1, 0 );
+            closesocket(client_file_descriptor);
+#else
             write(client_file_descriptor, responseOk, sizeof(responseOk) - 1); /*-1:'\0'*/
             close(client_file_descriptor);
+#endif
             break;
         } else {
-            write(client_file_descriptor, responseOk, sizeof(responseOk) - 1); /*-1:'\0'*/
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+            send( client_file_descriptor, responseErr, sizeof(responseErr) - 1, 0 );
+            closesocket(client_file_descriptor);
+#else
+            write(client_file_descriptor, responseErr, sizeof(responseErr) - 1); /*-1:'\0'*/
+            close(client_file_descriptor);
+#endif
         }
+
     }
+#if defined(_WIN32) || defined(__WIN32__) || defined(__WINDOWS__)
+    WSACleanup();
+#endif
     return authentication_response;
 }
 
